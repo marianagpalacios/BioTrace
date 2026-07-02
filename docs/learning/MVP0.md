@@ -185,7 +185,7 @@ A versão atual possui algumas limitações importantes:
 - não gera relatório PDF;
 - não possui testes automatizados.
 
-##Próximos passos
+## Próximos passos
 
 Possíveis evoluções do projeto:
 
@@ -200,7 +200,7 @@ Possíveis evoluções do projeto:
 - adicionar testes automatizados;
 - containerizar a aplicação com Docker.
 
-##Conclusão
+## Conclusão
 
 Este MVP estabelece a base inicial do projeto eDNA Insight. Embora ainda simplificado, o sistema já implementa o fluxo mínimo de análise: entrada de arquivo FASTA, leitura das sequências, cálculo de estatísticas, comparação com banco local e apresentação dos resultados.
 
