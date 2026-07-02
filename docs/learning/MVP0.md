@@ -1,4 +1,4 @@
-# MVP 0 — Análise inicial de arquivos FASTA
+## MVP 0 — Análise inicial de arquivos FASTA
 
 Este documento registra o desenvolvimento inicial do MVP do projeto eDNA Insight, uma aplicação simples para leitura, análise básica e identificação preliminar de sequências em arquivos FASTA.
 
