@@ -2,6 +2,15 @@ import streamlit as st
 import tempfile
 import pandas as pd
 
+from pathlib import Path
+import sys
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from src.fasta import read_fasta
 from src.stats import summarize_sequences
 from src.taxonomy import load_reference_database, best_similarity_match
