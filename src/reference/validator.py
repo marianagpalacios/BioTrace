@@ -9,13 +9,14 @@ from src.config import (
     REFERENCE_VALID_BASES,
 )
 
-
 _TEXT_COLUMNS = (
     "species",
     "id",
     "gene",
+    "marker_region",
     "accession",
     "source",
+    "retrieved_at",
 )
 
 _WHITESPACE_PATTERN = re.compile(r"\s+")

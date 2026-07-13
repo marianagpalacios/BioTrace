@@ -7,6 +7,13 @@ DEFAULT_REFERENCE_DATABASE_PATH = (
     PROJECT_ROOT / "data" / "reference" / "species_database.csv"
 )
 
+DEFAULT_REFERENCE_METADATA_PATH = (
+    PROJECT_ROOT
+    / "data"
+    / "reference"
+    / "database_metadata.json"
+)
+
 LOG_DIRECTORY = PROJECT_ROOT / "logs"
 LOG_FILE_PATH = LOG_DIRECTORY / "biotrace.log"
 
@@ -24,9 +31,42 @@ REFERENCE_REQUIRED_COLUMNS = frozenset(
 )
 
 REFERENCE_OPTIONAL_COLUMNS = frozenset(
-    {"gene", "accession", "source"}
+    {
+        "gene",
+        "marker_region",
+        "accession",
+        "source",
+        "retrieved_at",
+    }
 )
 
 REFERENCE_VALID_BASES = frozenset(
     {"A", "T", "C", "G", "N"}
 )
+
+CURATED_REFERENCE_REQUIRED_COLUMNS = frozenset(
+    {
+        "species",
+        "id",
+        "gene",
+        "marker_region",
+        "accession",
+        "source",
+        "retrieved_at",
+        "sequence",
+    }
+)
+
+CURATED_REFERENCE_VALID_BASES = frozenset(
+    {"A", "T", "C", "G"}
+)
+
+REFERENCE_EXPECTED_GENE = "COI"
+REFERENCE_EXPECTED_MARKER_REGION = "COI-5P"
+REFERENCE_EXPECTED_SOURCE = "NCBI GenBank"
+
+REFERENCE_MIN_SEQUENCE_LENGTH = 500
+REFERENCE_MAX_SEQUENCE_LENGTH = 800
+
+REFERENCE_MIN_RECORDS_PER_SPECIES = 2
+REFERENCE_MAX_LENGTH_SPREAD = 100
