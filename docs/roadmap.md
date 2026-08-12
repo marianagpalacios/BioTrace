@@ -73,7 +73,7 @@ O banco continua demonstrativo.
 
 ## MVP v0.4.0 — Banco de referência e proveniência
 
-**Status:** em fechamento; será marcado como concluído após aprovação e merge da PR.
+**Status:** concluído.
 
 **Foco:** banco de referência e proveniência científica.
 
@@ -91,7 +91,7 @@ O banco continua demonstrativo.
 - [x] integrar metadata ao pipeline e à interface;
 - [x] documentar proveniência e limitações taxonômicas;
 - [x] criar testes para curadoria, dataset e metadata;
-- [ ] aprovar e fazer merge da PR do MVP v0.4.0.
+- [x] aprovar e fazer merge da PR do MVP v0.4.0.
 
 ### Por que vem agora?
 

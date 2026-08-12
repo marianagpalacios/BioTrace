@@ -2,7 +2,7 @@
 
 > Plataforma open source para análise automatizada de DNA ambiental (eDNA), identificação taxonômica simplificada e geração de indicadores iniciais de biodiversidade.
 
-**Versão em desenvolvimento:** MVP v0.4.0
+**Versão atual:** MVP v0.4.0
 **Foco da versão:** banco COI-5P curado, validação científica, proveniência e integridade verificável.
 
 ---
