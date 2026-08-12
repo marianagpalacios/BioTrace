@@ -4,7 +4,7 @@
 
 O BioTrace foi projetado para evoluir de forma incremental, sem antecipar a complexidade de ferramentas maduras de Bioinformática.
 
-A arquitetura do MVP v0.3.0 prioriza:
+A arquitetura do MVP v0.4.0 prioriza:
 
 - responsabilidade única;
 - baixo acoplamento;
@@ -37,9 +37,13 @@ A arquitetura do MVP v0.3.0 prioriza:
    v         v         v          v          v              v
  FASTA   Validação  Estatísticas Referência Similaridade  Logging
                                      │
-                          ┌──────────┼──────────┐
-                          v          v          v
-                        Loader    Validator   Database
+                          ┌──────────┼────────────────────────────┐
+                          v          v             v              v
+                        Loader   Structural   Curation       Metadata
+                                  validator   validator      validator
+                                                   \            /
+                                                    v          v
+                                                ReferenceDatabase
 ```
 
 ---
@@ -122,19 +126,22 @@ Localização:
 src/reference/
 ```
 
-A camada separa três responsabilidades:
+A camada separa carregamento, validação estrutural, validação científica, proveniência e acesso:
 
 ```text
-CSV -> loader -> DataFrame bruto
-                  |
-                  v
-              validator
-                  |
-                  v
-          DataFrame normalizado
-                  |
-                  v
-          ReferenceDatabase
+CSV
+ ↓
+loader
+ ↓
+structural validator
+ ↓
+curation validator
+ ↓
+metadata validator
+ ↓
+ReferenceDatabase
+ ↓
+classification
 ```
 
 Essa separação permite trocar a origem dos dados no futuro sem obrigar o algoritmo taxonômico a conhecer CSV ou Pandas.
@@ -193,7 +200,7 @@ O desvio padrão usado é populacional (`pstdev`), pois o arquivo analisado é t
 
 O loader verifica se o caminho existe e se o CSV pode ser lido.
 
-O validator verifica:
+O validador estrutural verifica e normaliza:
 
 - colunas obrigatórias;
 - linhas vazias;
@@ -206,6 +213,10 @@ O validator verifica:
 - letras minúsculas;
 - colunas opcionais;
 - possíveis inconsistências de capitalização.
+
+O validador de curadoria aplica as regras do banco COI-5P: colunas científicas obrigatórias, accession.version, fonte, data, A/C/G/T, comprimento de 500–800 bp, duas referências por espécie e duplicidades de sequência. Duplicidade entre espécies bloqueia a base; duplicidade dentro da mesma espécie gera warning.
+
+O validador de metadata confere versão, marcador, fonte, contagens e o SHA-256 do CSV. `ReferenceDatabase.from_files()` somente disponibiliza a base após todas essas etapas.
 
 ### 4.6 Similaridade
 
@@ -235,6 +246,7 @@ O serviço retorna um dicionário com:
 - rankings;
 - estatísticas do banco;
 - avisos;
+- metadata e proveniência da base;
 - tempo de execução.
 
 ---
@@ -313,6 +325,18 @@ O serviço retorna um dicionário com:
 
 **Trade-off:** a classificação do v0.3.0 permanece apenas demonstrativa.
 
+### ADR-010 — Dataset e software possuem versões independentes
+
+**Decisão:** o software usa v0.4.0 e o banco curado usa v1.0.0.
+
+**Benefício:** o banco pode evoluir sem exigir a mesma numeração do aplicativo.
+
+### ADR-011 — Integridade por SHA-256
+
+**Decisão:** a metadata armazena o hash do CSV e ele é verificado antes da classificação.
+
+**Benefício:** alterações acidentais ou não documentadas no banco são detectadas.
+
 ---
 
 ## 6. Tratamento de falhas
@@ -331,6 +355,9 @@ O serviço retorna um dicionário com:
 - CSV malformado;
 - colunas ausentes;
 - conteúdo inválido.
+- violação das regras científicas;
+- metadata ausente ou inválida;
+- checksum ou contagens incompatíveis.
 
 Essas falhas são convertidas em mensagens compreensíveis para a interface.
 
@@ -388,6 +415,6 @@ A arquitetura já permite:
 - logging global configurado no import;
 - ausência de CI;
 - ausência de empacotamento;
-- ausência de versionamento formal do esquema do banco.
+- ausência de versionamento formal do esquema do banco, embora o conteúdo já possua versão e checksum.
 
 Essas limitações são aceitáveis no MVP e devem ser atacadas apenas quando houver necessidade concreta.

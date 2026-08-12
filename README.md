@@ -2,8 +2,8 @@
 
 > Plataforma open source para análise automatizada de DNA ambiental (eDNA), identificação taxonômica simplificada e geração de indicadores iniciais de biodiversidade.
 
-**Versão atual:** MVP v0.3.0  
-**Foco da versão:** qualidade dos dados, confiabilidade da análise, testes automatizados, observabilidade e preparação arquitetural.
+**Versão em desenvolvimento:** MVP v0.4.0
+**Foco da versão:** banco COI-5P curado, validação científica, proveniência e integridade verificável.
 
 ---
 
@@ -26,35 +26,25 @@ O objetivo atual não é substituir ferramentas consolidadas, como BLAST, Kraken
 
 ---
 
-## Escopo do MVP v0.3.0
+## Escopo do MVP v0.4.0
 
-O MVP v0.3.0 consolida a base de qualidade e confiabilidade do BioTrace.
+O MVP v0.4.0 transforma a camada de referência preparada no v0.3.0 em um conjunto científico pequeno, controlado e reproduzível.
 
 ### Entregas desta versão
 
-- infraestrutura de testes com `pytest`;
-- configuração centralizada em `src/config.py`;
-- camada dedicada ao banco de referência;
-- validação estrutural do CSV de referência;
-- distinção entre erros bloqueantes e avisos de normalização;
-- representação do banco por meio de `ReferenceDatabase`;
-- cálculo de similaridade baseado em distância de edição;
-- suporte a substituições, inserções e deleções simples;
-- frequências de A, T, C e G;
-- conteúdo AT e GC;
-- mediana e desvio padrão do comprimento;
-- métricas por sequência;
-- sistema de logs com rotação de arquivos;
-- tempo de execução da análise;
-- exportação dos resultados, estatísticas e rankings;
-- interface atualizada para as novas métricas;
-- suíte automatizada com 28 testes.
+- banco v1.0.0 com 10 referências COI-5P de 5 espécies de Actinopterygii;
+- duas referências por espécie, obtidas do NCBI GenBank;
+- accessions com versão e data de recuperação;
+- curadoria apoiada pela consulta a GenBank e BOLD;
+- validação científica separada da validação estrutural;
+- bloqueio de bases ambíguas, comprimentos inválidos e conflitos entre espécies;
+- warning auditável para duplicidade intraespecífica em *Gadus morhua*;
+- metadata versionada e checksum SHA-256 do CSV;
+- carregamento integrado de CSV e metadata por `ReferenceDatabase.from_files()`;
+- proveniência da base exibida na interface;
+- construção reprodutível do CSV, da metadata e do FASTA de exemplo.
 
-### Alteração de escopo
-
-A curadoria de um banco com sequências biológicas reais, accessions rastreáveis e documentação de proveniência foi transferida para o **MVP v0.4.0**.
-
-O CSV atual continua sendo um conjunto demonstrativo. A arquitetura de carregamento, validação e consulta já está preparada para receber um banco curado posteriormente.
+> Dez referências não constituem um banco taxonômico abrangente. O dataset foi construído para permitir estudo controlado e reprodutível dos componentes do BioTrace.
 
 ---
 
@@ -116,6 +106,12 @@ Para cada sequência:
 - normalização auditável de espaços e minúsculas;
 - listagem de espécies e IDs;
 - estatísticas básicas do banco.
+- regras científicas para COI/COI-5P, A/C/G/T e 500–800 bp;
+- mínimo de duas referências por espécie;
+- validação de accession.version, fonte e data;
+- metadata da base v1.0.0;
+- verificação de contagens e SHA-256 antes da classificação;
+- distinção entre duplicidade intraespecífica (warning) e interespecífica (erro).
 
 ### Observabilidade
 
@@ -221,7 +217,7 @@ Por isso, a pontuação deve ser interpretada como uma medida computacional did�
 
 ---
 
-## Banco de referência atual
+## Banco de referência curado
 
 O arquivo padrão está em:
 
@@ -229,23 +225,22 @@ O arquivo padrão está em:
 data/reference/species_database.csv
 ```
 
-As colunas obrigatórias são:
+O banco v1.0.0 contém 10 referências de 5 espécies de Actinopterygii, com duas referências por espécie. O marcador é COI-5P e a fonte registrada é NCBI GenBank.
+
+As colunas da base curada são:
 
 | Coluna | Descrição |
 |---|---|
 | `species` | Nome da espécie |
 | `id` | Identificador único da referência |
-| `sequence` | Sequência de nucleotídeos |
-
-As colunas opcionais são:
-
-| Coluna | Descrição |
-|---|---|
+| `sequence` | Sequência contendo somente A/C/G/T, entre 500 e 800 bp |
 | `gene` | Gene ou marcador |
+| `marker_region` | Região do marcador (`COI-5P`) |
 | `accession` | Identificador no banco de origem |
 | `source` | Fonte do registro |
+| `retrieved_at` | Data de recuperação em formato ISO |
 
-O banco incluído nesta versão é demonstrativo e não possui curadoria científica suficiente para uso real. A substituição por sequências reais e rastreáveis faz parte do MVP v0.4.0.
+`data/reference/database_metadata.json` registra versão, escopo, contagens, fonte, data e SHA-256. Consulte [a documentação científica da base](docs/reference_database.md) e [o inventário da pasta](data/reference/README.md).
 
 ---
 
@@ -259,15 +254,20 @@ BioTrace/
 │   ├── examples/
 │   │   └── sample.fasta
 │   └── reference/
+│       ├── README.md
+│       ├── accessions.txt
+│       ├── database_metadata.json
 │       └── species_database.csv
 ├── docs/
 │   ├── architecture.md
 │   ├── modules.md
 │   ├── roadmap.md
+│   ├── reference_database.md
 │   └── learning/
 │       ├── MVP0.md
 │       ├── MVP1.md
 │       ├── MVP2.md
+│       ├── MVP3.md
 │       └── fundamentos.md
 ├── logs/
 │   └── .gitkeep
@@ -275,7 +275,9 @@ BioTrace/
 │   ├── reference/
 │   │   ├── __init__.py
 │   │   ├── database.py
+│   │   ├── curation_validator.py
 │   │   ├── loader.py
+│   │   ├── metadata.py
 │   │   └── validator.py
 │   ├── services/
 │   │   ├── __init__.py
@@ -370,7 +372,7 @@ Depois, abra o endereço indicado pelo Streamlit no navegador.
 Um arquivo de exemplo está disponível em:
 
 ```text
-data/examples/sample.fasta
+data/examples/example_query.fasta
 ```
 
 ---
@@ -392,10 +394,10 @@ python -m pytest tests/test_similarity.py -v
 Valide a compilação:
 
 ```bash
-python -m compileall app src
+python -m compileall app src scripts
 ```
 
-Na conclusão do MVP v0.3.0, a suíte contém 28 testes cobrindo:
+No MVP v0.4.0, a suíte também cobre:
 
 - leitura FASTA;
 - validação de sequências;
@@ -406,6 +408,10 @@ Na conclusão do MVP v0.3.0, a suíte contém 28 testes cobrindo:
 - classificação;
 - estatísticas;
 - logging.
+- regras de curadoria científica;
+- integridade do dataset real;
+- metadata e checksum;
+- carregamento versionado do banco.
 
 A suíte ainda não cobre integralmente a interface e o fluxo completo do serviço.
 
@@ -451,21 +457,22 @@ A versão atual usa configuração em código. Arquivo externo de configuração
 - [Arquitetura](docs/architecture.md)
 - [Módulos](docs/modules.md)
 - [Roadmap](docs/roadmap.md)
+- [Banco de referência](docs/reference_database.md)
 - [Fundamentos de Bioinformática](docs/learning/fundamentos.md)
-- [Registro do MVP v0.3.0](docs/learning/MVP2.md)
+- [Registro didático do MVP v0.4.0](docs/learning/MVP3.md)
 
 ---
 
 ## Limitações atuais
 
-- banco de referência demonstrativo;
-- ausência de proveniência científica dos registros atuais;
+- cobertura taxonômica restrita a 5 espécies e 10 referências;
+- dataset inadequado para inferências taxonômicas abrangentes;
 - ausência de FASTQ e escores Phred;
 - ausência de complemento reverso;
 - ausência de alinhamento biológico;
 - ausência de BLAST;
 - comparação exaustiva com todas as referências;
-- ausência de hashes e manifesto da execução;
+- ausência de manifesto completo de cada execução;
 - ausência de CI;
 - ausência de testes de integração completos;
 - ausência de empacotamento da aplicação;
@@ -475,16 +482,7 @@ A versão atual usa configuração em código. Arquivo externo de configuração
 
 ## Próxima versão
 
-O MVP v0.4.0 será dedicado ao banco de referência:
-
-- seleção de um marcador biológico;
-- sequências reais;
-- accessions verificáveis;
-- fontes documentadas;
-- múltiplas referências por espécie;
-- validações biológicas adicionais;
-- versão e checksum do banco;
-- documentação de proveniência e limitações.
+O MVP v0.5.0 será dedicado à reprodutibilidade de cada execução, incluindo manifesto, hashes das entradas, parâmetros, integração contínua e contratos mais tipados.
 
 Consulte [`docs/roadmap.md`](docs/roadmap.md) para o plano completo.
 
