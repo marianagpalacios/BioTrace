@@ -73,24 +73,25 @@ O banco continua demonstrativo.
 
 ## MVP v0.4.0 — Banco de referência e proveniência
 
-**Foco:** qualidade científica dos dados.
+**Status:** em fechamento; será marcado como concluído após aprovação e merge da PR.
+
+**Foco:** banco de referência e proveniência científica.
 
 ### Objetivos
 
-- definir o marcador-alvo;
-- definir critérios de inclusão;
-- selecionar espécies e sequências reais;
-- registrar accessions;
-- registrar fonte e data de acesso;
-- manter múltiplas referências por espécie;
-- validar comprimentos;
-- validar proporção de `N`;
-- identificar duplicatas de sequência;
-- detectar conflitos entre accession e espécie;
-- versionar o banco;
-- gerar checksum SHA-256;
-- documentar limitações taxonômicas;
-- criar testes para o banco curado.
+- [x] definir COI-5P como marcador-alvo;
+- [x] documentar critérios de inclusão e exclusão;
+- [x] selecionar 5 espécies e 10 sequências reais;
+- [x] registrar accession.version, fonte e data de acesso;
+- [x] manter duas referências por espécie;
+- [x] validar A/C/G/T e comprimentos de 500–800 bp;
+- [x] detectar duplicatas intra e interespecíficas;
+- [x] versionar o banco como v1.0.0;
+- [x] gerar e validar checksum SHA-256;
+- [x] integrar metadata ao pipeline e à interface;
+- [x] documentar proveniência e limitações taxonômicas;
+- [x] criar testes para curadoria, dataset e metadata;
+- [ ] aprovar e fazer merge da PR do MVP v0.4.0.
 
 ### Por que vem agora?
 

@@ -1,6 +1,6 @@
 # Módulos do BioTrace
 
-Este documento descreve as responsabilidades dos módulos do MVP v0.3.0.
+Este documento descreve as responsabilidades dos módulos do MVP v0.4.0.
 
 ---
 
@@ -48,6 +48,7 @@ Centralizar parâmetros e caminhos padrão.
 
 - raiz do projeto;
 - caminho do banco;
+- caminho da metadata do banco;
 - caminho do log;
 - limiar padrão;
 - limites do slider;
@@ -55,6 +56,7 @@ Centralizar parâmetros e caminhos padrão.
 - tamanho do ranking;
 - colunas do banco;
 - bases válidas.
+- regras COI-5P, limites de comprimento e mínimo por espécie.
 
 ### Trade-off
 
@@ -325,6 +327,7 @@ ReferenceDatabase
 ### Métodos
 
 - `from_csv`;
+- `from_files`;
 - `iter_records`;
 - `find_by_species`;
 - `list_species`;
@@ -334,6 +337,58 @@ ReferenceDatabase
 ### Encapsulamento
 
 O DataFrame interno não é exposto diretamente.
+
+`from_csv` mantém compatibilidade com bases genéricas. `from_files` carrega o CSV curado, aplica as duas validações, confere a metadata e expõe sua proveniência.
+
+---
+
+## `src/reference/curation_validator.py`
+
+### Responsabilidade
+
+Aplicar as regras científicas específicas da base BioTrace sem tornar o validador estrutural dependente de COI-5P.
+
+### Regras principais
+
+- nome binomial e accession.version;
+- gene COI, região COI-5P e fonte NCBI GenBank;
+- data ISO não futura;
+- somente A/C/G/T e comprimento de 500–800 bp;
+- mínimo de duas referências por espécie;
+- sequência idêntica entre espécies como erro;
+- sequência idêntica dentro da espécie como warning.
+
+---
+
+## `src/reference/metadata.py`
+
+### Responsabilidade
+
+Carregar e validar a proveniência versionada e a integridade do banco.
+
+### Componentes
+
+- `ReferenceDatabaseMetadata`;
+- `ReferenceMetadataError`;
+- cálculo SHA-256;
+- validação de versão, data, marcador, fonte e contagens;
+- comparação do checksum com o CSV atual.
+
+---
+
+# Scripts reproduzíveis
+
+## `scripts/build_curated_reference_csv.py`
+
+Constrói `species_database.csv` a partir do FASTA baixado, associa cada accession à espécie e ao ID interno e executa as validações antes da escrita.
+
+## `scripts/generate_reference_metadata.py`
+
+Valida o banco e gera `database_metadata.json` com versão, escopo, fonte, contagens, data e SHA-256.
+
+## `scripts/generate_example_fasta.py`
+
+Gera `data/examples/example_query.fasta` diretamente de uma referência curada, evitando cópia manual e mantendo o exemplo reproduzível.
 
 ---
 
@@ -385,6 +440,7 @@ O dicionário contém:
 - `rankings`;
 - `reference_statistics`;
 - `reference_warnings`;
+- `reference_metadata`;
 - `execution_time_seconds`.
 
 ### Limitação
