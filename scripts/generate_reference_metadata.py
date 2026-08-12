@@ -20,7 +20,9 @@ from src.reference.metadata import (
 from src.reference.validator import (
     validate_reference_dataframe,
 )
-
+from src.reference.curation_validator import (
+    validate_curated_reference_dataframe,
+)
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -91,13 +93,19 @@ def main() -> None:
         args.database
     )
 
-    validation = (
+    generic_validation = (
         validate_reference_dataframe(
             loaded
         )
     )
 
-    dataframe = validation.dataframe
+    curated_validation = (
+        validate_curated_reference_dataframe(
+            generic_validation.dataframe
+        )
+    )
+
+    dataframe = curated_validation.dataframe
 
     payload = {
         "name": args.name,
@@ -152,9 +160,13 @@ def main() -> None:
         f"{payload['csv_sha256']}"
     )
 
-    for warning in validation.warnings:
-        print(f"Aviso: {warning}")
-
+    for warning in (
+        *generic_validation.warnings,
+        *curated_validation.warnings,
+    ):
+        print(
+            f"Aviso: {warning}"
+        )
 
 if __name__ == "__main__":
     main()
