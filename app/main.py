@@ -462,6 +462,48 @@ if uploaded_file:
             ],
         )
 
+        reference_metadata = analysis.get(
+            "reference_metadata"
+        )
+
+        if reference_metadata:
+            st.markdown(
+                "**Proveniência da base curada**"
+            )
+
+            provenance_columns = st.columns(
+                3
+            )
+
+            provenance_columns[0].metric(
+                "Versão da base",
+                reference_metadata["version"],
+            )
+
+            provenance_columns[1].metric(
+                "Marcador",
+                reference_metadata["marker"],
+            )
+
+            provenance_columns[2].metric(
+                "Escopo taxonômico",
+                reference_metadata[
+                    "taxonomic_scope"
+                ],
+            )
+
+            st.caption(
+                "Fonte: "
+                f"{reference_metadata['source']} | "
+                "Criada em: "
+                f"{reference_metadata['created_at']}"
+            )
+
+            st.caption(
+                "SHA-256 do CSV: "
+                f"`{reference_metadata['csv_sha256']}`"
+            )
+
         st.caption(
             f"Arquivo de log: `{LOG_FILE_PATH}`"
         )
