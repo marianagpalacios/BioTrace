@@ -7,12 +7,19 @@ from src.config import (
     DEFAULT_ALLOW_N,
     DEFAULT_MIN_SIMILARITY,
     DEFAULT_REFERENCE_DATABASE_PATH,
+    DEFAULT_REFERENCE_METADATA_PATH,
     DEFAULT_TOP_N,
 )
 from src.fasta import read_fasta
 from src.logging_config import configure_logging
+from src.reference.curation_validator import (
+    CuratedReferenceValidationError,
+)
 from src.reference.database import ReferenceDatabase
 from src.reference.loader import ReferenceDatabaseLoadError
+from src.reference.metadata import (
+    ReferenceMetadataError,
+)
 from src.reference.validator import (
     ReferenceDatabaseValidationError,
 )
@@ -47,6 +54,9 @@ def analyze_fasta_file(
     allow_n: bool = DEFAULT_ALLOW_N,
     top_n: int = DEFAULT_TOP_N,
     progress_callback: ProgressCallback | None = None,
+    reference_metadata_path: str | Path = (
+        DEFAULT_REFERENCE_METADATA_PATH
+    ),
 ) -> dict[str, Any]:
     """Run the complete BioTrace analysis pipeline."""
     started_at = perf_counter()
@@ -164,13 +174,16 @@ def analyze_fasta_file(
     )
 
     try:
-        database = ReferenceDatabase.from_csv(
-            reference_database_path
+        database = ReferenceDatabase.from_files(
+            reference_database_path,
+            reference_metadata_path,
         )
 
     except (
         ReferenceDatabaseLoadError,
         ReferenceDatabaseValidationError,
+        CuratedReferenceValidationError,
+        ReferenceMetadataError,
     ) as error:
         LOGGER.error(
             "Reference database error | error=%s",
@@ -295,6 +308,11 @@ def analyze_fasta_file(
         ),
         "reference_warnings": list(
             database.warnings
+        ),
+        "reference_metadata": (
+            database.metadata.to_dict()
+            if database.metadata
+            else None
         ),
         "execution_time_seconds": round(
             elapsed,
