@@ -215,6 +215,7 @@ def main() -> None:
     curated_validation.dataframe.to_csv(
         args.output,
         index=False,
+        lineterminator="\n",
     )
 
     print(
