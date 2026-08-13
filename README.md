@@ -2,7 +2,7 @@
 
 > Plataforma open source para análise automatizada de DNA ambiental (eDNA), identificação taxonômica simplificada e geração de indicadores iniciais de biodiversidade.
 
-**Versão em desenvolvimento:** MVP v0.5.0
+**Versão atual:** MVP v0.5.0
 **Foco da versão:** reprodutibilidade de execuções, manifestos, hashing e integração contínua.
 
 ---
