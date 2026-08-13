@@ -1,7 +1,6 @@
 from collections.abc import Callable
 from pathlib import Path
 from time import perf_counter
-from typing import Any
 
 from src.config import (
     DEFAULT_ALLOW_N,
@@ -10,6 +9,7 @@ from src.config import (
     DEFAULT_REFERENCE_METADATA_PATH,
     DEFAULT_TOP_N,
 )
+from src.contracts import AnalysisResult
 from src.fasta import read_fasta
 from src.logging_config import configure_logging
 from src.reference.curation_validator import (
@@ -57,7 +57,7 @@ def analyze_fasta_file(
     reference_metadata_path: str | Path = (
         DEFAULT_REFERENCE_METADATA_PATH
     ),
-) -> dict[str, Any]:
+) -> AnalysisResult:
     """Run the complete BioTrace analysis pipeline."""
     started_at = perf_counter()
 
