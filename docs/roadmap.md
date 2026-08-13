@@ -101,24 +101,26 @@ A arquitetura já valida a estrutura. O próximo passo lógico é tornar o conte
 
 ## MVP v0.5.0 — Reprodutibilidade e automação
 
+**Status:** em desenvolvimento.
+
 **Foco:** transformar cada execução em um resultado reproduzível.
 
 ### Objetivos
 
-- manifesto JSON da análise;
-- versão do BioTrace;
-- versão e hash do banco;
-- hash do arquivo de entrada;
-- parâmetros utilizados;
-- timestamps;
-- pacote de resultados;
-- modelos tipados para entrada e saída;
-- testes integrados do serviço;
-- GitHub Actions;
-- lint e formatação;
-- matriz de versões do Python;
-- documentação de contribuição;
-- arquivo `LICENSE`.
+- [x] manifesto JSON da análise;
+- [x] versão do BioTrace;
+- [x] versão e hash do banco e da metadata;
+- [x] hash do arquivo de entrada e dos resultados;
+- [x] parâmetros e timestamps;
+- [x] run ID e fingerprint determinístico;
+- [x] contratos tipados para análise e manifesto;
+- [x] testes integrados de sucesso e falha;
+- [x] reprodução baseada em manifesto;
+- [x] verificação local padronizada;
+- [x] GitHub Actions com matriz Python 3.12–3.14;
+- [x] documentação técnica e didática;
+- [ ] preparar versão final `0.5.0`;
+- [ ] aprovar a CI, mesclar a PR e publicar a tag.
 
 ### Resultado esperado
 

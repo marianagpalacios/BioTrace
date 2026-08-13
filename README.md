@@ -2,8 +2,8 @@
 
 > Plataforma open source para análise automatizada de DNA ambiental (eDNA), identificação taxonômica simplificada e geração de indicadores iniciais de biodiversidade.
 
-**Versão atual:** MVP v0.4.0
-**Foco da versão:** banco COI-5P curado, validação científica, proveniência e integridade verificável.
+**Versão em desenvolvimento:** MVP v0.5.0
+**Foco da versão:** reprodutibilidade de execuções, manifestos, hashing e integração contínua.
 
 ---
 
@@ -26,23 +26,23 @@ O objetivo atual não é substituir ferramentas consolidadas, como BLAST, Kraken
 
 ---
 
-## Escopo do MVP v0.4.0
+## Escopo do MVP v0.5.0
 
-O MVP v0.4.0 transforma a camada de referência preparada no v0.3.0 em um conjunto científico pequeno, controlado e reproduzível.
+O MVP v0.5.0 torna auditável o pipeline científico consolidado no v0.4.0. Cada análise passa a registrar as condições que definem a execução, seus artefatos e o ambiente computacional.
 
 ### Entregas desta versão
 
-- banco v1.0.0 com 10 referências COI-5P de 5 espécies de Actinopterygii;
-- duas referências por espécie, obtidas do NCBI GenBank;
-- accessions com versão e data de recuperação;
-- curadoria apoiada pela consulta a GenBank e BOLD;
-- validação científica separada da validação estrutural;
-- bloqueio de bases ambíguas, comprimentos inválidos e conflitos entre espécies;
-- warning auditável para duplicidade intraespecífica em *Gadus morhua*;
-- metadata versionada e checksum SHA-256 do CSV;
-- carregamento integrado de CSV e metadata por `ReferenceDatabase.from_files()`;
-- proveniência da base exibida na interface;
-- construção reprodutível do CSV, da metadata e do FASTA de exemplo.
+- manifesto JSON para cada execução concluída, interrompida ou com falha;
+- SHA-256 do FASTA, banco, metadata e resultados;
+- `run_id` único e `run_fingerprint` determinístico;
+- parâmetros de análise registrados;
+- versão do BioTrace, commit Git e estado dirty/clean;
+- versão e implementação do Python e plataforma do sistema;
+- contratos `TypedDict` para análise e manifesto;
+- reprodução baseada em manifesto com verificação de entrada, banco e resultados;
+- painel de proveniência e download do manifesto no Streamlit;
+- verificação local padronizada com `pip check`, pytest e compileall;
+- GitHub Actions com matriz Python 3.12, 3.13 e 3.14.
 
 > Dez referências não constituem um banco taxonômico abrangente. O dataset foi construído para permitir estudo controlado e reprodutível dos componentes do BioTrace.
 
@@ -123,6 +123,17 @@ Para cada sequência:
 - tempo de execução;
 - rotação automática dos arquivos de log.
 
+### Reprodutibilidade
+
+- manifesto JSON persistido em `runs/`;
+- estados `completed`, `stopped` e `failed`;
+- timestamps UTC e duração;
+- hash da entrada, da referência, da metadata e dos resultados;
+- fingerprint das condições científicas e computacionais;
+- identificação do commit e do ambiente Python;
+- comando para tentar reproduzir uma execução;
+- JSONs de execução ignorados pelo Git.
+
 ### Interface e exportação
 
 - barra de progresso;
@@ -136,6 +147,8 @@ Para cada sequência:
 - exportação dos resultados em CSV;
 - exportação das estatísticas em CSV;
 - exportação do ranking em CSV.
+- painel de reprodutibilidade da execução;
+- download do manifesto JSON.
 
 ---
 
@@ -143,6 +156,11 @@ Para cada sequência:
 
 ```text
 Interface Streamlit
+        |
+        v
+Reproducible Analysis Service
+        |
+        +--> Run Manifest
         |
         v
 Analysis Service
@@ -175,12 +193,12 @@ Mais detalhes estão em [`docs/architecture.md`](docs/architecture.md).
 4. As sequências são validadas.
 5. Sequências inválidas são separadas.
 6. As estatísticas são calculadas para as sequências válidas.
-7. O banco local é carregado.
-8. O banco é validado e normalizado.
-9. Cada sequência válida é comparada às referências.
-10. O ranking é calculado por espécie.
-11. O limiar mínimo é aplicado.
-12. Os resultados são apresentados e disponibilizados para exportação.
+7. O banco local é carregado e validado.
+8. Cada sequência válida é comparada às referências.
+9. O ranking e a classificação são calculados.
+10. O wrapper registra hashes, parâmetros, software e ambiente.
+11. Um manifesto com status e hash dos resultados é persistido.
+12. Os resultados e a proveniência são apresentados e disponibilizados para download.
 13. Eventos relevantes são registrados no log.
 
 ---
@@ -262,16 +280,24 @@ BioTrace/
 │   ├── architecture.md
 │   ├── modules.md
 │   ├── roadmap.md
+│   ├── reproducibility.md
 │   ├── reference_database.md
 │   └── learning/
 │       ├── MVP0.md
 │       ├── MVP1.md
 │       ├── MVP2.md
 │       ├── MVP3.md
+│       ├── MVP4.md
 │       └── fundamentos.md
 ├── logs/
 │   └── .gitkeep
+├── runs/
+│   └── .gitkeep
 ├── src/
+│   ├── reproducibility/
+│   │   ├── contracts.py
+│   │   ├── hashing.py
+│   │   └── manifest.py
 │   ├── reference/
 │   │   ├── __init__.py
 │   │   ├── database.py
@@ -281,15 +307,18 @@ BioTrace/
 │   │   └── validator.py
 │   ├── services/
 │   │   ├── __init__.py
-│   │   └── analysis_service.py
+│   │   ├── analysis_service.py
+│   │   └── reproducible_analysis_service.py
 │   ├── __init__.py
 │   ├── config.py
+│   ├── contracts.py
 │   ├── fasta.py
 │   ├── logging_config.py
 │   ├── similarity.py
 │   ├── stats.py
 │   ├── taxonomy.py
-│   └── validation.py
+│   ├── validation.py
+│   └── version.py
 ├── tests/
 │   ├── reference/
 │   │   ├── test_database.py
@@ -317,7 +346,7 @@ BioTrace/
 - Git;
 - ambiente virtual recomendado.
 
-O MVP foi executado durante o desenvolvimento em ambiente Windows com Python 3.14.2. A compatibilidade com outras versões deve ser validada pela futura integração contínua.
+O MVP é desenvolvido localmente em Windows com Python 3.14.2. A integração contínua verifica também Python 3.12 e 3.13 em Ubuntu.
 
 ---
 
@@ -379,7 +408,13 @@ data/examples/example_query.fasta
 
 ## Testes
 
-Execute toda a suíte:
+Execute a porta de qualidade usada localmente e na CI:
+
+```bash
+python scripts/verify_project.py
+```
+
+Ou execute apenas a suíte:
 
 ```bash
 python -m pytest
@@ -397,7 +432,7 @@ Valide a compilação:
 python -m compileall app src scripts
 ```
 
-No MVP v0.4.0, a suíte também cobre:
+No MVP v0.5.0, a suíte também cobre:
 
 - leitura FASTA;
 - validação de sequências;
@@ -412,8 +447,14 @@ No MVP v0.4.0, a suíte também cobre:
 - integridade do dataset real;
 - metadata e checksum;
 - carregamento versionado do banco.
+- hashing canônico;
+- construção e persistência do manifesto;
+- fingerprint determinístico;
+- execução integrada concluída e com falha.
 
-A suíte ainda não cobre integralmente a interface e o fluxo completo do serviço.
+A interface ainda depende de teste manual, mas o fluxo completo do serviço reproduzível possui cobertura de integração.
+
+O GitHub Actions executa a mesma verificação em Python 3.12, 3.13 e 3.14.
 
 ---
 
@@ -458,8 +499,10 @@ A versão atual usa configuração em código. Arquivo externo de configuração
 - [Módulos](docs/modules.md)
 - [Roadmap](docs/roadmap.md)
 - [Banco de referência](docs/reference_database.md)
+- [Reprodutibilidade](docs/reproducibility.md)
 - [Fundamentos de Bioinformática](docs/learning/fundamentos.md)
 - [Registro didático do MVP v0.4.0](docs/learning/MVP3.md)
+- [Registro didático do MVP v0.5.0](docs/learning/MVP4.md)
 
 ---
 
@@ -472,9 +515,9 @@ A versão atual usa configuração em código. Arquivo externo de configuração
 - ausência de alinhamento biológico;
 - ausência de BLAST;
 - comparação exaustiva com todas as referências;
-- ausência de manifesto completo de cada execução;
-- ausência de CI;
-- ausência de testes de integração completos;
+- ausência de ambiente hermético ou container versionado;
+- dependências nativas e detalhes do sistema ainda podem afetar reproduções;
+- reprodução depende da disponibilidade dos artefatos originais;
 - ausência de empacotamento da aplicação;
 - ausência de licença formal no repositório.
 
@@ -482,7 +525,7 @@ A versão atual usa configuração em código. Arquivo externo de configuração
 
 ## Próxima versão
 
-O MVP v0.5.0 será dedicado à reprodutibilidade de cada execução, incluindo manifesto, hashes das entradas, parâmetros, integração contínua e contratos mais tipados.
+Após o fechamento do v0.5.0, o MVP v0.6.0 será dedicado a FASTQ e controle de qualidade de dados de sequenciamento.
 
 Consulte [`docs/roadmap.md`](docs/roadmap.md) para o plano completo.
 

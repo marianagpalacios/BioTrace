@@ -1,6 +1,6 @@
 # Módulos do BioTrace
 
-Este documento descreve as responsabilidades dos módulos do MVP v0.4.0.
+Este documento descreve as responsabilidades dos módulos do MVP v0.5.0.
 
 ---
 
@@ -443,9 +443,63 @@ O dicionário contém:
 - `reference_metadata`;
 - `execution_time_seconds`.
 
-### Limitação
+### Contrato
 
-O contrato ainda é um dicionário amplo. Modelos tipados são recomendados para uma versão futura.
+O retorno é formalizado por `AnalysisResult`, um `TypedDict` parcial que preserva os caminhos de parada antecipada. Os valores internos continuam flexíveis e podem ganhar modelos mais específicos em versões futuras.
+
+---
+
+## `src/services/reproducible_analysis_service.py`
+
+### Responsabilidade
+
+Envolver o serviço de análise com identificação, medição, status e persistência de proveniência.
+
+### Estados
+
+- `completed`: há sequências válidas e resultados;
+- `stopped`: término controlado sem sequência válida;
+- `failed`: uma exceção impediu a conclusão.
+
+---
+
+# Reprodutibilidade
+
+## `src/contracts.py`
+
+Define `AnalysisResult`, contrato tipado e parcial do serviço científico.
+
+## `src/reproducibility/hashing.py`
+
+Calcula SHA-256 de bytes e arquivos e serializa JSON de forma canônica para que a ordem das chaves não altere o hash.
+
+## `src/reproducibility/contracts.py`
+
+Define `TypedDict` para parâmetros, entrada, referência, software, ambiente, contagens, manifesto e resultado reproduzível.
+
+## `src/reproducibility/manifest.py`
+
+Coleta snapshots, cria UUID, timestamps e fingerprint, calcula o hash dos resultados e grava ou carrega JSON.
+
+## `src/version.py`
+
+Expõe a versão do software registrada em cada manifesto.
+
+---
+
+# Automação
+
+## `scripts/reproduce_run.py`
+
+Valida os hashes do manifesto, reutiliza os parâmetros e compara fingerprint e resultados de uma nova execução.
+
+## `scripts/verify_project.py`
+
+Executa `pip check`, pytest e compileall. É a mesma porta de qualidade usada no GitHub Actions.
+
+## `.github/workflows/ci.yml`
+
+Executa a verificação em Ubuntu com Python 3.12, 3.13 e 3.14.
 
 ---
 
