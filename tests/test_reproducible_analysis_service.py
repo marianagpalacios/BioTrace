@@ -1,10 +1,16 @@
+import json
 from pathlib import Path
+
+import pytest
 
 from src.config import (
     PROJECT_ROOT,
 )
 from src.reproducibility.hashing import (
     sha256_file,
+)
+from src.services.analysis_service import (
+    AnalysisError,
 )
 from src.services.reproducible_analysis_service import (
     analyze_fasta_reproducibly,
@@ -126,4 +132,57 @@ def test_same_analysis_has_same_fingerprint(
         == second_manifest[
             "result_sha256"
         ]
+    )
+
+
+def test_failed_analysis_writes_failed_manifest(
+    tmp_path,
+) -> None:
+    runs_directory = (
+        tmp_path
+        / "runs"
+    )
+
+    missing_database = (
+        tmp_path
+        / "missing.csv"
+    )
+
+    with pytest.raises(
+        AnalysisError
+    ):
+        analyze_fasta_reproducibly(
+            file_path=str(
+                EXAMPLE_FASTA
+            ),
+            reference_database_path=(
+                missing_database
+            ),
+            manifest_directory=(
+                runs_directory
+            ),
+        )
+
+    manifests = list(
+        runs_directory.glob(
+            "*.json"
+        )
+    )
+
+    assert len(manifests) == 1
+
+    payload = json.loads(
+        manifests[0].read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert (
+        payload["status"]
+        == "failed"
+    )
+
+    assert (
+        payload["error"]
+        is not None
     )
