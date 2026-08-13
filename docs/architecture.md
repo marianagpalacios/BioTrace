@@ -4,7 +4,7 @@
 
 O BioTrace foi projetado para evoluir de forma incremental, sem antecipar a complexidade de ferramentas maduras de Bioinformática.
 
-A arquitetura do MVP v0.4.0 prioriza:
+A arquitetura do MVP v0.5.0 prioriza:
 
 - responsabilidade única;
 - baixo acoplamento;
@@ -19,6 +19,28 @@ A arquitetura do MVP v0.4.0 prioriza:
 ---
 
 ## 2. Visão geral
+
+```text
+                    Streamlit
+                       |
+                       v
+          Reproducible Analysis Service
+                       |
+             +---------+---------+
+             |                   |
+             v                   v
+       Analysis Service      Run Manifest
+             |                   |
+             v                   +--> input SHA-256
+       Analysis Pipeline         +--> reference SHA-256
+                                 +--> parameters
+                                 +--> software version
+                                 +--> Git commit
+                                 +--> result SHA-256
+                                 +--> fingerprint
+```
+
+O `Analysis Service` contém a regra de negócio científica. O `Reproducible Analysis Service` envolve essa regra com proveniência da execução. O manifesto é a evidência auditável persistida do que foi executado.
 
 ```text
 ┌──────────────────────────┐
@@ -100,7 +122,25 @@ Responsabilidades:
 8. montar a resposta para a interface;
 9. registrar conclusão ou erro.
 
-### 3.3 Domínio e utilitários científicos
+O wrapper em `src/services/reproducible_analysis_service.py` cria o `run_id`, mede a execução externamente, classifica seu estado e persiste o manifesto sem misturar essa responsabilidade com a análise científica.
+
+### 3.3 Reprodutibilidade
+
+Localização:
+
+```text
+src/reproducibility/
+```
+
+Responsabilidades:
+
+- produzir SHA-256 de arquivos e JSON canônico;
+- registrar snapshots da entrada, referência, software e ambiente;
+- calcular o fingerprint determinístico;
+- calcular o hash dos campos estáveis dos resultados;
+- gravar e carregar manifestos JSON.
+
+### 3.4 Domínio e utilitários científicos
 
 Localização:
 
@@ -118,7 +158,7 @@ Inclui:
 - configuração;
 - logging.
 
-### 3.4 Camada de referência
+### 3.5 Camada de referência
 
 Localização:
 
@@ -337,6 +377,18 @@ O serviço retorna um dicionário com:
 
 **Benefício:** alterações acidentais ou não documentadas no banco são detectadas.
 
+### ADR-012 — Wrapper reproduzível separado
+
+**Decisão:** manter proveniência em um serviço externo ao serviço científico.
+
+**Benefício:** a análise permanece testável e independente da persistência de manifestos.
+
+### ADR-013 — Run ID e fingerprint são conceitos diferentes
+
+**Decisão:** UUID identifica uma ocorrência; SHA-256 identifica as condições determinísticas.
+
+**Benefício:** execuções distintas podem ser reconhecidas como equivalentes sem perder identidade individual.
+
 ---
 
 ## 6. Tratamento de falhas
@@ -413,7 +465,7 @@ A arquitetura já permite:
 - ausência de injeção explícita de dependências;
 - serviço principal ainda retorna estrutura ampla;
 - logging global configurado no import;
-- ausência de CI;
+- CI limitada a testes, dependências e compilação, sem empacotamento ou implantação;
 - ausência de empacotamento;
 - ausência de versionamento formal do esquema do banco, embora o conteúdo já possua versão e checksum.
 

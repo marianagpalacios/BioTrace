@@ -3,6 +3,11 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
+RUNS_DIRECTORY = (
+    PROJECT_ROOT
+    / "runs"
+)
+
 DEFAULT_REFERENCE_DATABASE_PATH = (
     PROJECT_ROOT / "data" / "reference" / "species_database.csv"
 )

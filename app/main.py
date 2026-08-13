@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -25,7 +26,9 @@ from src.config import (  # noqa: E402
 )
 from src.services.analysis_service import (  # noqa: E402
     AnalysisError,
-    analyze_fasta_file,
+)
+from src.services.reproducible_analysis_service import (  # noqa: E402
+    analyze_fasta_reproducibly,
 )
 
 
@@ -107,15 +110,19 @@ if uploaded_file:
                 text=message,
             )
 
-        analysis = analyze_fasta_file(
-            file_path=temp_path,
-            reference_database_path=(
-                DEFAULT_REFERENCE_DATABASE_PATH
-            ),
-            min_similarity=min_similarity,
-            allow_n=allow_n,
-            top_n=int(top_n),
-            progress_callback=update_progress,
+        analysis = (
+            analyze_fasta_reproducibly(
+                file_path=temp_path,
+                reference_database_path=(
+                    DEFAULT_REFERENCE_DATABASE_PATH
+                ),
+                min_similarity=min_similarity,
+                allow_n=allow_n,
+                top_n=int(top_n),
+                progress_callback=(
+                    update_progress
+                ),
+            )
         )
 
     except AnalysisError as error:
@@ -138,6 +145,135 @@ if uploaded_file:
     valid_count = analysis["valid_count"]
     invalid_count = analysis["invalid_count"]
     total_sequences = analysis["total_sequences"]
+
+    run_manifest = analysis.get(
+        "run_manifest"
+    )
+
+    if run_manifest:
+        with st.expander(
+            "Reprodutibilidade da execução"
+        ):
+            run_columns = st.columns(3)
+
+            run_columns[0].metric(
+                "Status",
+                run_manifest["status"],
+            )
+
+            run_columns[1].metric(
+                "BioTrace",
+                run_manifest[
+                    "software"
+                ]["version"],
+            )
+
+            run_columns[2].metric(
+                "Python",
+                run_manifest[
+                    "environment"
+                ]["python_version"],
+            )
+
+            st.markdown(
+                "**Run ID**"
+            )
+
+            st.code(
+                run_manifest["run_id"]
+            )
+
+            st.markdown(
+                "**Fingerprint da execução**"
+            )
+
+            st.code(
+                run_manifest[
+                    "run_fingerprint"
+                ]
+            )
+
+            st.markdown(
+                "**SHA-256 da entrada**"
+            )
+
+            st.code(
+                run_manifest[
+                    "input"
+                ]["sha256"]
+            )
+
+            st.markdown(
+                "**SHA-256 dos resultados**"
+            )
+
+            st.code(
+                run_manifest[
+                    "result_sha256"
+                ]
+                or "não disponível"
+            )
+
+            parameters = (
+                run_manifest[
+                    "parameters"
+                ]
+            )
+
+            st.caption(
+                "Parâmetros: "
+                f"min_similarity="
+                f"{parameters['min_similarity']} | "
+                f"allow_n="
+                f"{parameters['allow_n']} | "
+                f"top_n="
+                f"{parameters['top_n']}"
+            )
+
+            software = (
+                run_manifest[
+                    "software"
+                ]
+            )
+
+            if software[
+                "git_dirty"
+            ]:
+                st.warning(
+                    "Esta execução foi realizada "
+                    "com alterações locais não "
+                    "commitadas. A reprodução "
+                    "exata não é garantida."
+                )
+
+            manifest_json = (
+                json.dumps(
+                    run_manifest,
+                    ensure_ascii=False,
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+
+            st.download_button(
+                label=(
+                    "Baixar manifesto "
+                    "da execução"
+                ),
+                data=manifest_json.encode(
+                    "utf-8"
+                ),
+                file_name=(
+                    f"biotrace_run_"
+                    f"{run_manifest['run_id']}"
+                    f".json"
+                ),
+                mime="application/json",
+                key=(
+                    "run-manifest-"
+                    f"{run_manifest['run_id']}"
+                ),
+            )
 
     for warning in analysis.get(
         "reference_warnings",

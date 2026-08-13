@@ -24,6 +24,7 @@ from src.reference.curation_validator import (
     validate_curated_reference_dataframe,
 )
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -138,6 +139,7 @@ def main() -> None:
         )
         + "\n",
         encoding="utf-8",
+        newline="\n",
     )
 
     print(
@@ -167,6 +169,7 @@ def main() -> None:
         print(
             f"Aviso: {warning}"
         )
+
 
 if __name__ == "__main__":
     main()

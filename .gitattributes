@@ -1,0 +1,6 @@
+# Scientific and reproducibility artifacts must have stable bytes on all OSes.
+*.csv text eol=lf
+*.json text eol=lf
+*.fasta text eol=lf
+*.fa text eol=lf
+*.fna text eol=lf

@@ -65,6 +65,7 @@ def main() -> None:
             f"{wrapped}\n"
         ),
         encoding="utf-8",
+        newline="\n",
     )
 
     print(

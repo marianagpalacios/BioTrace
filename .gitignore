@@ -7,3 +7,7 @@ __pycache__/
 # Runtime logs
 logs/*
 !logs/.gitkeep
+
+# Runtime analysis manifests
+runs/*
+!runs/.gitkeep

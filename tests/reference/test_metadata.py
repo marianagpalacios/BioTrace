@@ -27,8 +27,10 @@ def test_metadata_matches_curated_database() -> None:
         loaded
     )
 
-    curated = validate_curated_reference_dataframe(
-        generic.dataframe
+    curated = (
+        validate_curated_reference_dataframe(
+            generic.dataframe
+        )
     )
 
     metadata = load_reference_metadata(
@@ -43,11 +45,16 @@ def test_metadata_matches_curated_database() -> None:
 
     assert metadata.version == "1.0.0"
     assert metadata.marker == "COI-5P"
-    assert metadata.taxonomic_scope == "Actinopterygii"
+    assert metadata.taxonomic_scope == (
+        "Actinopterygii"
+    )
     assert metadata.source == "NCBI GenBank"
+
     assert metadata.record_count == 10
     assert metadata.species_count == 5
 
-    assert metadata.csv_sha256 == calculate_sha256(
-        DEFAULT_REFERENCE_DATABASE_PATH
+    assert metadata.csv_sha256 == (
+        calculate_sha256(
+            DEFAULT_REFERENCE_DATABASE_PATH
+        )
     )
