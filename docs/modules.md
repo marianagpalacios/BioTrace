@@ -1,6 +1,6 @@
 # Módulos do BioTrace
 
-Este documento descreve as responsabilidades dos módulos do MVP v0.5.0.
+Este documento descreve as responsabilidades dos módulos do MVP v0.6.0.
 
 ---
 
@@ -12,10 +12,11 @@ Interface web construída com Streamlit.
 
 ### Entradas
 
-- arquivo FASTA;
+- arquivo FASTA ou FASTQ;
 - limiar mínimo;
 - permissão da base `N`;
-- quantidade máxima de resultados.
+- quantidade máxima de resultados;
+- parâmetros de controle de qualidade FASTQ.
 
 ### Saídas
 
@@ -30,7 +31,8 @@ Interface web construída com Streamlit.
 - `streamlit`;
 - `pandas`;
 - `src.config`;
-- `src.services.analysis_service`.
+- `src.services.analysis_service`, para o contrato de erro;
+- `src.services.reproducible_analysis_service`, para executar FASTA ou FASTQ com manifesto.
 
 ### Observação
 
@@ -242,6 +244,41 @@ configure_logging(log_file=LOG_FILE_PATH) -> logging.Logger
 
 ---
 
+# FASTQ e controle de qualidade
+
+## `src/fastq.py`
+
+### Responsabilidade
+
+Interpretar arquivos FASTQ sem misturar parsing com controle de qualidade ou classificação.
+
+### Contratos
+
+Define `FastqRecord`, contendo `id`, `sequence` e `qualities`.
+
+### Função principal
+
+`read_fastq()` utiliza o Biopython, converte a sequência para maiúsculas e preserva os escores Phred. A quantidade de qualidades deve ser igual ao comprimento da sequência; arquivos inválidos geram `FastqReadError`.
+
+## `src/quality.py`
+
+### Responsabilidade
+
+Aplicar controle de qualidade básico e auditável aos registros FASTQ.
+
+### Componentes
+
+- `QualityControlConfig`: parâmetros do QC;
+- `QualityControlResult`: sequências aprovadas, rejeições, relatório e resumo;
+- `trim_low_quality_ends()`: trimming terminal 5' e 3';
+- `quality_control_fastq()`: coordenação das regras de qualidade.
+
+### Métricas e regras
+
+O módulo calcula Phred médio, mínimo e máximo, Q20, Q30, comprimentos bruto e retido e bases removidas em cada extremidade. Depois do trimming, valida bases, comprimento e qualidade média. Bases internas de baixa qualidade não são removidas.
+
+---
+
 # Camada de referência
 
 ## `src/reference/loader.py`
@@ -390,9 +427,25 @@ Valida o banco e gera `database_metadata.json` com versão, escopo, fonte, conta
 
 Gera `data/examples/example_query.fasta` diretamente de uma referência curada, evitando cópia manual e mantendo o exemplo reproduzível.
 
+## `scripts/generate_example_fastq.py`
+
+Gera deterministicamente `data/examples/example_reads.fastq` a partir de sequências do banco curado. O exemplo contém um read aprovado após trimming, um rejeitado por qualidade média e um rejeitado por comprimento.
+
 ---
 
 # Serviço
+
+## `src/services/sequence_analysis_service.py`
+
+Dispatcher que encaminha a entrada para `analyze_fasta_file()` ou `analyze_fastq_file()` de acordo com `InputFormat`. Mantém os detalhes dos serviços específicos fora da interface.
+
+## `src/services/classification_service.py`
+
+Núcleo compartilhado que recebe sequências previamente aprovadas, calcula estatísticas, carrega o banco versionado, classifica cada sequência e monta resultados e rankings. Essa extração evita duplicação entre FASTA e FASTQ.
+
+## `src/services/fastq_analysis_service.py`
+
+Coordena parsing FASTQ, controle de qualidade e envio dos reads aprovados ao núcleo compartilhado. Retorna também `input_format`, `quality_summary`, `quality_report` e os motivos de rejeição.
 
 ## `src/services/analysis_service.py`
 
@@ -455,6 +508,8 @@ O retorno é formalizado por `AnalysisResult`, um `TypedDict` parcial que preser
 
 Envolver o serviço de análise com identificação, medição, status e persistência de proveniência.
 
+A função `analyze_sequence_file_reproducibly()` aceita FASTA ou FASTQ e registra parâmetros específicos de QC. `analyze_fasta_reproducibly()` permanece como wrapper de compatibilidade com o v0.5.
+
 ### Estados
 
 - `completed`: há sequências válidas e resultados;
@@ -467,7 +522,7 @@ Envolver o serviço de análise com identificação, medição, status e persist
 
 ## `src/contracts.py`
 
-Define `AnalysisResult`, contrato tipado e parcial do serviço científico.
+Define `InputFormat` e `AnalysisResult`. O resultado parcial contempla FASTA, FASTQ, resumo e relatório de qualidade.
 
 ## `src/reproducibility/hashing.py`
 
@@ -475,11 +530,11 @@ Calcula SHA-256 de bytes e arquivos e serializa JSON de forma canônica para que
 
 ## `src/reproducibility/contracts.py`
 
-Define `TypedDict` para parâmetros, entrada, referência, software, ambiente, contagens, manifesto e resultado reproduzível.
+Define `TypedDict` para parâmetros, entrada, referência, software, ambiente, contagens, manifesto e resultado reproduzível. `AnalysisParameters` registra o formato e os parâmetros FASTQ; para FASTA, os campos exclusivos de qualidade permanecem como `None`.
 
 ## `src/reproducibility/manifest.py`
 
-Coleta snapshots, cria UUID, timestamps e fingerprint, calcula o hash dos resultados e grava ou carrega JSON.
+Coleta snapshots, cria UUID, timestamps e fingerprint, calcula o hash dos resultados e grava ou carrega JSON. O schema `1.1` inclui o formato da entrada e considera `quality_summary` e `quality_report` no hash dos resultados.
 
 ## `src/version.py`
 
@@ -491,7 +546,7 @@ Expõe a versão do software registrada em cada manifesto.
 
 ## `scripts/reproduce_run.py`
 
-Valida os hashes do manifesto, reutiliza os parâmetros e compara fingerprint e resultados de uma nova execução.
+Valida schema e hashes do manifesto, identifica FASTA ou FASTQ, reutiliza os parâmetros de análise e QC e compara fingerprint e resultados da nova execução.
 
 ## `scripts/verify_project.py`
 
@@ -536,3 +591,19 @@ Criação e gravação do log.
 ## `tests/reference/`
 
 Carregamento, validação e consultas do banco.
+
+## `tests/test_fastq.py`
+
+Cobre leitura de registros, escores Phred, múltiplos reads e FASTQ inválido.
+
+## `tests/test_quality.py`
+
+Cobre trimming terminal, aprovação, filtros de qualidade e comprimento, base `N`, métricas agregadas e configuração inválida.
+
+## `tests/test_fastq_analysis_service.py`
+
+Testa a integração do FASTQ de exemplo com controle de qualidade e classificação.
+
+## `tests/test_reproducible_analysis_service.py`
+
+Cobre manifestos concluídos e com falha, fingerprint determinístico e parâmetros de QC de execuções FASTQ.

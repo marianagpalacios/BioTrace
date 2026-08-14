@@ -14,6 +14,7 @@ from src.services.analysis_service import (
 )
 from src.services.reproducible_analysis_service import (
     analyze_fasta_reproducibly,
+    analyze_sequence_file_reproducibly,
 )
 
 
@@ -22,6 +23,13 @@ EXAMPLE_FASTA = (
     / "data"
     / "examples"
     / "example_query.fasta"
+)
+
+EXAMPLE_FASTQ = (
+    PROJECT_ROOT
+    / "data"
+    / "examples"
+    / "example_reads.fastq"
 )
 
 
@@ -186,3 +194,24 @@ def test_failed_analysis_writes_failed_manifest(
         payload["error"]
         is not None
     )
+
+
+def test_reproducible_fastq_records_qc_parameters(
+    tmp_path,
+) -> None:
+    result = analyze_sequence_file_reproducibly(
+        file_path=str(EXAMPLE_FASTQ),
+        input_format="fastq",
+        manifest_directory=tmp_path,
+    )
+
+    manifest = result["run_manifest"]
+    parameters = manifest["parameters"]
+
+    assert parameters["input_format"] == "fastq"
+    assert parameters["min_mean_quality"] == 20.0
+    assert parameters["min_length"] == 500
+    assert parameters["max_length"] == 800
+    assert parameters["trim_ends"] is True
+    assert parameters["trim_quality_threshold"] == 20
+    assert result["quality_summary"]["passed_records"] == 1

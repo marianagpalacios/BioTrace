@@ -15,12 +15,24 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.config import (  # noqa: E402
     DEFAULT_ALLOW_N,
+    DEFAULT_FASTQ_MAX_LENGTH,
+    DEFAULT_FASTQ_MIN_LENGTH,
+    DEFAULT_FASTQ_MIN_MEAN_QUALITY,
+    DEFAULT_FASTQ_TRIM_ENDS,
+    DEFAULT_FASTQ_TRIM_QUALITY,
     DEFAULT_MIN_SIMILARITY,
     DEFAULT_REFERENCE_DATABASE_PATH,
     DEFAULT_TOP_N,
+    FASTQ_QUALITY_STEP,
     LOG_FILE_PATH,
+    MAX_FASTQ_LENGTH,
+    MAX_FASTQ_MEAN_QUALITY,
+    MAX_FASTQ_TRIM_QUALITY,
     MAX_RANKING_RESULTS,
     MAX_SIMILARITY,
+    MIN_FASTQ_LENGTH,
+    MIN_FASTQ_MEAN_QUALITY,
+    MIN_FASTQ_TRIM_QUALITY,
     MIN_SIMILARITY,
     SIMILARITY_STEP,
 )
@@ -28,7 +40,7 @@ from src.services.analysis_service import (  # noqa: E402
     AnalysisError,
 )
 from src.services.reproducible_analysis_service import (  # noqa: E402
-    analyze_fasta_reproducibly,
+    analyze_sequence_file_reproducibly,
 )
 
 
@@ -71,6 +83,75 @@ with st.sidebar:
         step=1,
     )
 
+    with st.expander(
+        "Controle de qualidade FASTQ"
+    ):
+        min_mean_quality = st.number_input(
+            "Phred médio mínimo",
+            min_value=(
+                MIN_FASTQ_MEAN_QUALITY
+            ),
+            max_value=(
+                MAX_FASTQ_MEAN_QUALITY
+            ),
+            value=(
+                DEFAULT_FASTQ_MIN_MEAN_QUALITY
+            ),
+            step=FASTQ_QUALITY_STEP,
+        )
+
+        min_read_length = st.number_input(
+            "Comprimento mínimo "
+            "após QC (bp)",
+            min_value=MIN_FASTQ_LENGTH,
+            max_value=MAX_FASTQ_LENGTH,
+            value=DEFAULT_FASTQ_MIN_LENGTH,
+            step=1,
+        )
+
+        max_read_length = st.number_input(
+            "Comprimento máximo "
+            "após QC (bp)",
+            min_value=MIN_FASTQ_LENGTH,
+            max_value=MAX_FASTQ_LENGTH,
+            value=DEFAULT_FASTQ_MAX_LENGTH,
+            step=1,
+        )
+
+        trim_ends = st.checkbox(
+            "Remover bases de baixa "
+            "qualidade nas extremidades",
+            value=DEFAULT_FASTQ_TRIM_ENDS,
+        )
+
+        trim_quality_threshold = (
+            st.number_input(
+                "Phred mínimo para "
+                "trimming das extremidades",
+                min_value=(
+                    MIN_FASTQ_TRIM_QUALITY
+                ),
+                max_value=(
+                    MAX_FASTQ_TRIM_QUALITY
+                ),
+                value=(
+                    DEFAULT_FASTQ_TRIM_QUALITY
+                ),
+                step=1,
+                disabled=(
+                    not trim_ends
+                ),
+            )
+        )
+
+        st.caption(
+            "Estes parâmetros são aplicados "
+            "somente a FASTQ. Os limites "
+            "padrão de comprimento acompanham "
+            "o escopo didático COI-5P "
+            "do banco atual."
+        )
+
     st.caption(
         "A similaridade usa distância de edição "
         "normalizada. Ela considera substituições, "
@@ -80,18 +161,62 @@ with st.sidebar:
 
 
 uploaded_file = st.file_uploader(
-    "Envie um arquivo FASTA",
-    type=["fasta", "fa", "fna"],
+    "Envie um arquivo FASTA ou FASTQ",
+    type=[
+        "fasta",
+        "fa",
+        "fna",
+        "fastq",
+        "fq",
+    ],
 )
 
 
 if uploaded_file:
+    uploaded_suffix = Path(
+        uploaded_file.name
+    ).suffix.lower()
+
+    input_format = (
+        "fastq"
+        if uploaded_suffix
+        in {
+            ".fastq",
+            ".fq",
+        }
+        else "fasta"
+    )
+
+    temp_suffix = (
+        ".fastq"
+        if input_format
+        == "fastq"
+        else ".fasta"
+    )
+
+    if (
+        input_format == "fastq"
+        and int(
+            min_read_length
+        )
+        > int(
+            max_read_length
+        )
+    ):
+        st.error(
+            "O comprimento mínimo "
+            "não pode ser maior que "
+            "o comprimento máximo."
+        )
+
+        st.stop()
+
     temp_path: str | None = None
 
     try:
         with tempfile.NamedTemporaryFile(
             delete=False,
-            suffix=".fasta",
+            suffix=temp_suffix,
         ) as temp_file:
             temp_file.write(uploaded_file.read())
             temp_path = temp_file.name
@@ -111,8 +236,9 @@ if uploaded_file:
             )
 
         analysis = (
-            analyze_fasta_reproducibly(
+            analyze_sequence_file_reproducibly(
                 file_path=temp_path,
+                input_format=input_format,
                 reference_database_path=(
                     DEFAULT_REFERENCE_DATABASE_PATH
                 ),
@@ -121,6 +247,19 @@ if uploaded_file:
                 top_n=int(top_n),
                 progress_callback=(
                     update_progress
+                ),
+                min_mean_quality=float(
+                    min_mean_quality
+                ),
+                min_length=int(
+                    min_read_length
+                ),
+                max_length=int(
+                    max_read_length
+                ),
+                trim_ends=trim_ends,
+                trim_quality_threshold=int(
+                    trim_quality_threshold
                 ),
             )
         )
@@ -283,11 +422,147 @@ if uploaded_file:
             f"Banco de referência: {warning}"
         )
 
+    quality_report_df: (
+        pd.DataFrame | None
+    ) = None
+
+    if (
+        analysis.get(
+            "input_format"
+        )
+        == "fastq"
+    ):
+        st.subheader(
+            "Controle de qualidade FASTQ"
+        )
+
+        quality_summary = analysis[
+            "quality_summary"
+        ]
+
+        quality_columns = st.columns(6)
+
+        quality_columns[0].metric(
+            "Reads recebidos",
+            quality_summary[
+                "total_records"
+            ],
+        )
+
+        quality_columns[1].metric(
+            "Aprovados",
+            quality_summary[
+                "passed_records"
+            ],
+        )
+
+        quality_columns[2].metric(
+            "Rejeitados",
+            quality_summary[
+                "rejected_records"
+            ],
+        )
+
+        quality_columns[3].metric(
+            "Bases removidas",
+            quality_summary[
+                "trimmed_bases"
+            ],
+        )
+
+        quality_columns[4].metric(
+            "Phred médio retido",
+            quality_summary[
+                "retained_mean_phred"
+            ],
+        )
+
+        quality_columns[5].metric(
+            "Q30 (%)",
+            quality_summary[
+                "retained_q30_percent"
+            ],
+        )
+
+        quality_report_df = pd.DataFrame(
+            analysis["quality_report"]
+        )
+
+        quality_report_df["reasons"] = (
+            quality_report_df[
+                "reasons"
+            ].apply(
+                lambda reasons: (
+                    " | ".join(reasons)
+                    if reasons
+                    else "-"
+                )
+            )
+        )
+
+        quality_report_df = (
+            quality_report_df.rename(
+                columns={
+                    "id": "ID",
+                    "raw_length": (
+                        "Comprimento bruto (bp)"
+                    ),
+                    "retained_length": (
+                        "Comprimento após QC (bp)"
+                    ),
+                    "trimmed_left": (
+                        "Removidas 5'"
+                    ),
+                    "trimmed_right": (
+                        "Removidas 3'"
+                    ),
+                    "mean_phred": (
+                        "Phred médio"
+                    ),
+                    "min_phred": (
+                        "Phred mínimo"
+                    ),
+                    "max_phred": (
+                        "Phred máximo"
+                    ),
+                    "q20_percent": (
+                        "Q20 (%)"
+                    ),
+                    "q30_percent": (
+                        "Q30 (%)"
+                    ),
+                    "passed": "Aprovado",
+                    "reasons": "Motivos",
+                }
+            )
+        )
+
+        st.dataframe(
+            quality_report_df,
+            use_container_width=True,
+            hide_index=True,
+        )
+
+        st.download_button(
+            label="Baixar relatório de QC",
+            data=(
+                quality_report_df
+                .to_csv(index=False)
+                .encode("utf-8")
+            ),
+            file_name=(
+                "biotrace_fastq_quality_report.csv"
+            ),
+            mime="text/csv",
+        )
+
     if invalid_count:
         st.error(
-            f"{invalid_count} sequência(s) "
-            "inválida(s) foram encontrada(s) "
-            "e não serão classificadas."
+            f"{invalid_count} registro(s) "
+            "foram reprovado(s) pela "
+            "validação ou pelo controle "
+            "de qualidade e não serão "
+            "classificados."
         )
 
         invalid_df = pd.DataFrame(

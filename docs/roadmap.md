@@ -101,7 +101,7 @@ A arquitetura já valida a estrutura. O próximo passo lógico é tornar o conte
 
 ## MVP v0.5.0 — Reprodutibilidade e automação
 
-**Status:** em desenvolvimento.
+**Status:** concluído.
 
 **Foco:** transformar cada execução em um resultado reproduzível.
 
@@ -119,8 +119,8 @@ A arquitetura já valida a estrutura. O próximo passo lógico é tornar o conte
 - [x] verificação local padronizada;
 - [x] GitHub Actions com matriz Python 3.12–3.14;
 - [x] documentação técnica e didática;
-- [ ] preparar versão final `0.5.0`;
-- [ ] aprovar a CI, mesclar a PR e publicar a tag.
+- [x] preparar versão final `0.5.0`;
+- [x] aprovar a CI, mesclar a PR e publicar a tag.
 
 ### Resultado esperado
 
@@ -130,19 +130,28 @@ Outra pessoa poderá repetir uma análise e verificar quais entradas, parâmetro
 
 ## MVP v0.6.0 — FASTQ e controle de qualidade
 
-**Foco:** entrada mais próxima de dados de sequenciamento.
+**Status:** em desenvolvimento.
+
+**Foco:** entrada mais próxima de dados de sequenciamento, com controle de qualidade básico, auditável e reproduzível.
 
 ### Objetivos
 
-- leitura FASTQ;
-- escores Phred;
-- estatísticas de qualidade;
-- filtragem por qualidade mínima;
-- filtragem por comprimento;
-- remoção ou corte de bases de baixa qualidade;
-- relatório de registros aprovados e rejeitados;
-- arquivos de exemplo pequenos;
-- testes específicos.
+- [x] leitura FASTQ;
+- [x] escores Phred;
+- [x] estatísticas Q20 e Q30;
+- [x] Phred médio por read;
+- [x] trimming de extremidades;
+- [x] filtragem por qualidade média;
+- [x] filtragem por comprimento;
+- [x] relatório de aprovados e rejeitados;
+- [x] integração com classificação;
+- [x] manifesto reproduzível para FASTQ;
+- [x] exemplo FASTQ reproduzível;
+- [x] testes automatizados;
+- [x] interface Streamlit;
+- [x] documentação final;
+- [x] preparar release v0.6.0;
+- [ ] CI verde, merge e tag.
 
 ### O que não deve entrar junto
 

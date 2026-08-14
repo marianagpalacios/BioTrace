@@ -20,6 +20,11 @@ if str(PROJECT_ROOT) not in sys.path:
 
 
 from src.config import (  # noqa: E402
+    DEFAULT_FASTQ_MAX_LENGTH,
+    DEFAULT_FASTQ_MIN_LENGTH,
+    DEFAULT_FASTQ_MIN_MEAN_QUALITY,
+    DEFAULT_FASTQ_TRIM_ENDS,
+    DEFAULT_FASTQ_TRIM_QUALITY,
     DEFAULT_REFERENCE_DATABASE_PATH,
     DEFAULT_REFERENCE_METADATA_PATH,
     RUNS_DIRECTORY,
@@ -28,10 +33,11 @@ from src.reproducibility.hashing import (  # noqa: E402
     sha256_file,
 )
 from src.reproducibility.manifest import (  # noqa: E402
+    MANIFEST_SCHEMA_VERSION,
     load_run_manifest,
 )
 from src.services.reproducible_analysis_service import (  # noqa: E402
-    analyze_fasta_reproducibly,
+    analyze_sequence_file_reproducibly,
 )
 
 
@@ -99,6 +105,23 @@ def main() -> int:
         )
     )
 
+    if (
+        original[
+            "schema_version"
+        ]
+        != MANIFEST_SCHEMA_VERSION
+    ):
+        return fail(
+            "A versão do schema do "
+            "manifesto é "
+            f"{original['schema_version']}, "
+            "mas esta versão do BioTrace "
+            "usa "
+            f"{MANIFEST_SCHEMA_VERSION}. "
+            "Faça checkout da versão do "
+            "BioTrace registrada no manifesto."
+        )
+
     if original[
         "software"
     ]["git_dirty"]:
@@ -152,11 +175,16 @@ def main() -> int:
         "parameters"
     ]
 
+    input_format = parameters[
+        "input_format"
+    ]
+
     result = (
-        analyze_fasta_reproducibly(
+        analyze_sequence_file_reproducibly(
             file_path=str(
                 args.input
             ),
+            input_format=input_format,
             reference_database_path=(
                 args.database
             ),
@@ -177,6 +205,61 @@ def main() -> int:
                 parameters[
                     "top_n"
                 ]
+            ),
+            min_mean_quality=(
+                parameters[
+                    "min_mean_quality"
+                ]
+                if parameters[
+                    "min_mean_quality"
+                ]
+                is not None
+                else
+                DEFAULT_FASTQ_MIN_MEAN_QUALITY
+            ),
+            min_length=(
+                parameters[
+                    "min_length"
+                ]
+                if parameters[
+                    "min_length"
+                ]
+                is not None
+                else
+                DEFAULT_FASTQ_MIN_LENGTH
+            ),
+            max_length=(
+                parameters[
+                    "max_length"
+                ]
+                if parameters[
+                    "max_length"
+                ]
+                is not None
+                else
+                DEFAULT_FASTQ_MAX_LENGTH
+            ),
+            trim_ends=(
+                parameters[
+                    "trim_ends"
+                ]
+                if parameters[
+                    "trim_ends"
+                ]
+                is not None
+                else
+                DEFAULT_FASTQ_TRIM_ENDS
+            ),
+            trim_quality_threshold=(
+                parameters[
+                    "trim_quality_threshold"
+                ]
+                if parameters[
+                    "trim_quality_threshold"
+                ]
+                is not None
+                else
+                DEFAULT_FASTQ_TRIM_QUALITY
             ),
             manifest_directory=(
                 args.output_dir

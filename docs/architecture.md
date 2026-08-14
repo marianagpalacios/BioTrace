@@ -4,7 +4,7 @@
 
 O BioTrace foi projetado para evoluir de forma incremental, sem antecipar a complexidade de ferramentas maduras de Bioinformática.
 
-A arquitetura do MVP v0.5.0 prioriza:
+A arquitetura do MVP v0.6.0 prioriza:
 
 - responsabilidade única;
 - baixo acoplamento;
@@ -21,52 +21,48 @@ A arquitetura do MVP v0.5.0 prioriza:
 ## 2. Visão geral
 
 ```text
-                    Streamlit
+                         Streamlit
+                            |
+                            v
+              Reproducible Analysis Service
+                            |
+                            v
+               Sequence Analysis Dispatcher
+                  /                 \
+                 /                   \
+                v                     v
+        FASTA Analysis          FASTQ Analysis
+             |                       |
+             v                       v
+        FASTA Reader            FASTQ Reader
+             |                       |
+             v                       v
+     Sequence Validation       Phred Quality Control
+                 \                   /
+                  \                 /
+                   v               v
+                 Valid Sequences
                        |
                        v
-          Reproducible Analysis Service
+              Classification Service
                        |
              +---------+---------+
              |                   |
              v                   v
-       Analysis Service      Run Manifest
-             |                   |
-             v                   +--> input SHA-256
-       Analysis Pipeline         +--> reference SHA-256
-                                 +--> parameters
-                                 +--> software version
-                                 +--> Git commit
-                                 +--> result SHA-256
-                                 +--> fingerprint
+          Statistics       ReferenceDatabase
+                                  |
+                                  v
+                              Taxonomy
 ```
 
-O `Analysis Service` contém a regra de negócio científica. O `Reproducible Analysis Service` envolve essa regra com proveniência da execução. O manifesto é a evidência auditável persistida do que foi executado.
+O `Reproducible Analysis Service` envolve a execução com proveniência, hashing e manifesto. O `Sequence Analysis Dispatcher` encaminha cada entrada para o serviço correspondente.
 
-```text
-┌──────────────────────────┐
-│     Interface Streamlit  │
-│       app/main.py        │
-└────────────┬─────────────┘
-             │
-             v
-┌──────────────────────────┐
-│   Serviço de análise     │
-│ analysis_service.py      │
-└────────────┬─────────────┘
-             │
-   ┌─────────┼──────────────────────────────────────────────┐
-   │         │         │          │          │              │
-   v         v         v          v          v              v
- FASTA   Validação  Estatísticas Referência Similaridade  Logging
-                                     │
-                          ┌──────────┼────────────────────────────┐
-                          v          v             v              v
-                        Loader   Structural   Curation       Metadata
-                                  validator   validator      validator
-                                                   \            /
-                                                    v          v
-                                                ReferenceDatabase
-```
+FASTA e FASTQ possuem etapas de entrada diferentes:
+
+- FASTA passa pela validação de sequência;
+- FASTQ passa pelo controle de qualidade Phred.
+
+Depois dessas etapas, apenas sequências aprovadas chegam ao `Classification Service`, que centraliza estatísticas, acesso ao banco de referência, classificação e ranking. Essa separação evita duplicar a regra científica comum.
 
 ---
 
@@ -104,9 +100,12 @@ Localização:
 
 ```text
 src/services/analysis_service.py
+src/services/fastq_analysis_service.py
+src/services/sequence_analysis_service.py
+src/services/classification_service.py
 ```
 
-O serviço representa o caso de uso principal: analisar um arquivo FASTA.
+Os serviços de aplicação representam os casos de uso de análise FASTA e FASTQ. O dispatcher seleciona o fluxo de entrada e ambos convergem para o núcleo compartilhado de classificação.
 
 Ele coordena os componentes, mas não implementa seus algoritmos internos.
 
@@ -114,8 +113,8 @@ Responsabilidades:
 
 1. iniciar a medição do tempo;
 2. registrar o início da execução;
-3. ler o FASTA;
-4. validar as sequências;
+3. ler FASTA ou FASTQ;
+4. validar sequências ou aplicar controle de qualidade;
 5. calcular estatísticas;
 6. carregar e validar o banco;
 7. classificar as sequências;
@@ -196,9 +195,11 @@ A interface aceita arquivos:
 
 - `.fasta`;
 - `.fa`;
-- `.fna`.
+- `.fna`;
+- `.fastq`;
+- `.fq`.
 
-O conteúdo é gravado em arquivo temporário porque o leitor FASTA trabalha com caminho de arquivo.
+A extensão permite ao dispatcher distinguir FASTA de FASTQ. O conteúdo enviado é gravado em um arquivo temporário com o sufixo correspondente antes de ser encaminhado ao serviço apropriado.
 
 ### 4.2 Leitura
 
@@ -210,6 +211,18 @@ O conteúdo é gravado em arquivo temporário porque o leitor FASTA trabalha com
     "sequence": "ATCG..."
 }
 ```
+
+`src/fastq.py` também utiliza o Biopython, mas preserva os escores Phred:
+
+```python
+{
+    "id": "identificador",
+    "sequence": "ATCG...",
+    "qualities": [30, 32, 29, 35],
+}
+```
+
+O leitor FASTQ exige um escore para cada base. Registros inconsistentes geram um erro de leitura.
 
 ### 4.3 Validação das consultas
 
@@ -229,6 +242,10 @@ O modo estrito aceita:
 ```text
 A, T, C, G
 ```
+
+Para FASTQ, `src/quality.py` executa trimming terminal, validação das bases, filtragem por comprimento e filtragem por qualidade média. O relatório preserva as métricas e os motivos de rejeição de cada read.
+
+FASTA e FASTQ convergem para uma lista de sequências válidas antes de entrar no núcleo compartilhado de classificação.
 
 ### 4.4 Estatísticas
 

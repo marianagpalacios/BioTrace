@@ -1,10 +1,18 @@
 """Typed contracts shared by BioTrace services."""
 
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
+
+
+InputFormat = Literal[
+    "fasta",
+    "fastq",
+]
 
 
 class AnalysisResult(TypedDict, total=False):
-    """Contract returned by the core analysis service."""
+    """Contract returned by BioTrace analysis services."""
+
+    input_format: InputFormat
 
     summary: dict[str, Any]
 
@@ -13,6 +21,15 @@ class AnalysisResult(TypedDict, total=False):
     invalid_count: int
 
     invalid_sequences: list[
+        dict[str, Any]
+    ]
+
+    quality_summary: dict[
+        str,
+        Any,
+    ]
+
+    quality_report: list[
         dict[str, Any]
     ]
 
