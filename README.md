@@ -2,8 +2,8 @@
 
 > Plataforma open source para análise automatizada de DNA ambiental (eDNA), identificação taxonômica simplificada e geração de indicadores iniciais de biodiversidade.
 
-**Versão atual:** MVP v0.5.0
-**Foco da versão:** reprodutibilidade de execuções, manifestos, hashing e integração contínua.
+**Versão em desenvolvimento:** MVP v0.6.0
+**Foco da versão:** leitura FASTQ, controle de qualidade Phred, trimming terminal e reprodutibilidade dos parâmetros de QC.
 
 ---
 
@@ -11,7 +11,7 @@
 
 O BioTrace é um projeto incremental criado para estudar Engenharia de Software e Bioinformática por meio da construção de um pipeline simplificado de análise de sequências.
 
-A aplicação recebe arquivos FASTA, valida as sequências, calcula estatísticas, compara cada sequência com um banco local de referência e apresenta uma classificação taxonômica simplificada.
+A aplicação recebe arquivos FASTA ou FASTQ, valida as sequências ou aplica controle de qualidade, calcula estatísticas, compara os registros aprovados com um banco local de referência e apresenta uma classificação taxonômica simplificada.
 
 O objetivo atual não é substituir ferramentas consolidadas, como BLAST, Kraken2, QIIME 2 ou DADA2. O projeto prioriza:
 
@@ -26,23 +26,24 @@ O objetivo atual não é substituir ferramentas consolidadas, como BLAST, Kraken
 
 ---
 
-## Escopo do MVP v0.5.0
+## Escopo do MVP v0.6.0
 
-O MVP v0.5.0 torna auditável o pipeline científico consolidado no v0.4.0. Cada análise passa a registrar as condições que definem a execução, seus artefatos e o ambiente computacional.
+O MVP v0.6.0 aproxima a entrada do BioTrace de dados de sequenciamento ao adicionar FASTQ e controle de qualidade Phred, preservando a análise FASTA e a proveniência introduzida no v0.5.0.
 
 ### Entregas desta versão
 
-- manifesto JSON para cada execução concluída, interrompida ou com falha;
-- SHA-256 do FASTA, banco, metadata e resultados;
-- `run_id` único e `run_fingerprint` determinístico;
-- parâmetros de análise registrados;
-- versão do BioTrace, commit Git e estado dirty/clean;
-- versão e implementação do Python e plataforma do sistema;
-- contratos `TypedDict` para análise e manifesto;
-- reprodução baseada em manifesto com verificação de entrada, banco e resultados;
-- painel de proveniência e download do manifesto no Streamlit;
-- verificação local padronizada com `pip check`, pytest e compileall;
-- GitHub Actions com matriz Python 3.12, 3.13 e 3.14.
+- leitura de `.fastq` e `.fq` com escores Phred;
+- métricas de qualidade média, Q20 e Q30;
+- trimming de baixa qualidade nas extremidades 5' e 3';
+- filtragem por comprimento e qualidade média;
+- relatório auditável de reads aprovados e rejeitados;
+- download do relatório de QC em CSV;
+- classificação dos reads aprovados pelo banco COI-5P;
+- manifesto schema `1.1` com formato e parâmetros de QC;
+- fingerprint e hash dos resultados sensíveis ao controle de qualidade;
+- reprodução de execuções FASTA e FASTQ;
+- exemplo FASTQ determinístico e testes automatizados;
+- controles e métricas FASTQ na interface Streamlit.
 
 > Dez referências não constituem um banco taxonômico abrangente. O dataset foi construído para permitir estudo controlado e reprodutível dos componentes do BioTrace.
 
@@ -52,13 +53,27 @@ O MVP v0.5.0 torna auditável o pipeline científico consolidado no v0.4.0. Cada
 
 ### Leitura e validação
 
-- upload de arquivos `.fasta`, `.fa` e `.fna`;
+- upload de arquivos `.fasta`, `.fa`, `.fna`, `.fastq` e `.fq`;
 - leitura com Biopython;
+- leitura dos escores Phred em FASTQ;
+- validação da correspondência entre sequência e qualidades;
+- dispatcher automático entre FASTA e FASTQ;
 - normalização das sequências para letras maiúsculas;
 - aceitação configurável da base ambígua `N`;
 - identificação de sequências vazias;
 - identificação de caracteres inválidos;
 - separação entre registros válidos e inválidos.
+
+### Controle de qualidade FASTQ
+
+- trimming de baixa qualidade nas extremidades 5' e 3';
+- Phred médio por read;
+- percentuais Q20 e Q30;
+- filtragem por comprimento;
+- filtragem por qualidade média;
+- relatório auditável de aprovados e rejeitados;
+- download do relatório em CSV;
+- parâmetros registrados no manifesto.
 
 ### Estatísticas
 
@@ -126,12 +141,14 @@ Para cada sequência:
 ### Reprodutibilidade
 
 - manifesto JSON persistido em `runs/`;
+- schema `1.1` com formato da entrada e parâmetros de QC;
 - estados `completed`, `stopped` e `failed`;
 - timestamps UTC e duração;
 - hash da entrada, da referência, da metadata e dos resultados;
 - fingerprint das condições científicas e computacionais;
 - identificação do commit e do ambiente Python;
-- comando para tentar reproduzir uma execução;
+- reprodução de execuções FASTA e FASTQ;
+- inclusão do resumo e relatório de QC no hash dos resultados;
 - JSONs de execução ignorados pelo Git.
 
 ### Interface e exportação
@@ -149,6 +166,9 @@ Para cada sequência:
 - exportação do ranking em CSV.
 - painel de reprodutibilidade da execução;
 - download do manifesto JSON.
+- controles de qualidade FASTQ;
+- métricas e relatório por read;
+- download do relatório de QC em CSV.
 
 ---
 
@@ -163,23 +183,27 @@ Reproducible Analysis Service
         +--> Run Manifest
         |
         v
-Analysis Service
+Sequence Analysis Dispatcher
         |
-        +--> FASTA Reader
-        +--> Sequence Validator
+        +--> FASTA Analysis
+        |      +--> FASTA Reader
+        |      +--> Sequence Validation
+        |
+        +--> FASTQ Analysis
+               +--> FASTQ Reader
+               +--> Phred Quality Control
+        |
+        v
+Classification Service
         +--> Statistics
-        +--> Reference Layer
-        |      +--> Loader
-        |      +--> Validator
-        |      +--> ReferenceDatabase
+        +--> ReferenceDatabase
         +--> Similarity
         +--> Taxonomy
-        +--> Logging
 ```
 
 A interface não executa as regras centrais. Ela coleta os parâmetros, chama o serviço e apresenta os resultados.
 
-O `analysis_service.py` atua como orquestrador do caso de uso, enquanto os demais módulos mantêm responsabilidades específicas.
+O dispatcher seleciona o serviço de entrada. FASTA e FASTQ convergem para o mesmo núcleo de classificação depois da validação ou do controle de qualidade.
 
 Mais detalhes estão em [`docs/architecture.md`](docs/architecture.md).
 
@@ -187,18 +211,18 @@ Mais detalhes estão em [`docs/architecture.md`](docs/architecture.md).
 
 ## Fluxo da análise
 
-1. O usuário envia um arquivo FASTA.
-2. A interface salva o conteúdo em um arquivo temporário.
-3. O serviço lê os registros.
-4. As sequências são validadas.
-5. Sequências inválidas são separadas.
-6. As estatísticas são calculadas para as sequências válidas.
+1. O usuário envia um arquivo FASTA ou FASTQ.
+2. A interface detecta o formato e salva o conteúdo temporariamente.
+3. O dispatcher seleciona o serviço correspondente.
+4. FASTA passa por validação; FASTQ passa por trimming e controle de qualidade Phred.
+5. Registros rejeitados são separados e documentados.
+6. As estatísticas são calculadas para as sequências aprovadas.
 7. O banco local é carregado e validado.
-8. Cada sequência válida é comparada às referências.
+8. Cada sequência aprovada é comparada às referências.
 9. O ranking e a classificação são calculados.
 10. O wrapper registra hashes, parâmetros, software e ambiente.
 11. Um manifesto com status e hash dos resultados é persistido.
-12. Os resultados e a proveniência são apresentados e disponibilizados para download.
+12. Resultados, proveniência e relatório de QC são disponibilizados para download.
 13. Eventos relevantes são registrados no log.
 
 ---
@@ -432,7 +456,7 @@ Valide a compilação:
 python -m compileall app src scripts
 ```
 
-No MVP v0.5.0, a suíte também cobre:
+No MVP v0.6.0, a suíte também cobre:
 
 - leitura FASTA;
 - validação de sequências;
@@ -451,6 +475,12 @@ No MVP v0.5.0, a suíte também cobre:
 - construção e persistência do manifesto;
 - fingerprint determinístico;
 - execução integrada concluída e com falha.
+- leitura FASTQ e escores Phred;
+- trimming terminal e filtros de qualidade;
+- métricas Q20 e Q30;
+- integração FASTQ com classificação;
+- parâmetros FASTQ no manifesto;
+- reprodução de execução FASTQ.
 
 A interface ainda depende de teste manual, mas o fluxo completo do serviço reproduzível possui cobertura de integração.
 
@@ -487,6 +517,9 @@ Entre eles:
 - limiar padrão;
 - aceitação da base `N`;
 - quantidade padrão do ranking;
+- qualidade Phred média mínima;
+- comprimentos mínimo e máximo após QC;
+- ativação e limiar do trimming terminal;
 - colunas obrigatórias e opcionais.
 
 A versão atual usa configuração em código. Arquivo externo de configuração e variáveis de ambiente podem ser introduzidos quando houver necessidade real.
@@ -500,9 +533,11 @@ A versão atual usa configuração em código. Arquivo externo de configuração
 - [Roadmap](docs/roadmap.md)
 - [Banco de referência](docs/reference_database.md)
 - [Reprodutibilidade](docs/reproducibility.md)
+- [Controle de qualidade FASTQ](docs/fastq_quality_control.md)
 - [Fundamentos de Bioinformática](docs/learning/fundamentos.md)
 - [Registro didático do MVP v0.4.0](docs/learning/MVP3.md)
 - [Registro didático do MVP v0.5.0](docs/learning/MVP4.md)
+- [Registro didático do MVP v0.6.0](docs/learning/MVP5.md)
 
 ---
 
@@ -510,8 +545,13 @@ A versão atual usa configuração em código. Arquivo externo de configuração
 
 - cobertura taxonômica restrita a 5 espécies e 10 referências;
 - dataset inadequado para inferências taxonômicas abrangentes;
-- ausência de FASTQ e escores Phred;
+- ausência de paired-end e merge R1/R2;
+- ausência de trimming de adaptadores e primers;
+- ausência de denoising e remoção de quimeras;
+- ausência de inferência de ASVs e agrupamento em OTUs;
+- ausência de suporte a `FASTQ.gz`;
 - ausência de complemento reverso;
+- ausência de orientação automática;
 - ausência de alinhamento biológico;
 - ausência de BLAST;
 - comparação exaustiva com todas as referências;
@@ -525,7 +565,7 @@ A versão atual usa configuração em código. Arquivo externo de configuração
 
 ## Próxima versão
 
-Após o fechamento do v0.5.0, o MVP v0.6.0 será dedicado a FASTQ e controle de qualidade de dados de sequenciamento.
+Após o fechamento do v0.6.0, o MVP v0.7.0 será dedicado à orientação de sequências e ao alinhamento biológico.
 
 Consulte [`docs/roadmap.md`](docs/roadmap.md) para o plano completo.
 
