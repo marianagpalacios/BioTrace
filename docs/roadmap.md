@@ -130,7 +130,7 @@ Outra pessoa poderá repetir uma análise e verificar quais entradas, parâmetro
 
 ## MVP v0.6.0 — FASTQ e controle de qualidade
 
-**Status:** em desenvolvimento.
+**Status:** concluído.
 
 **Foco:** entrada mais próxima de dados de sequenciamento, com controle de qualidade básico, auditável e reproduzível.
 
@@ -151,7 +151,7 @@ Outra pessoa poderá repetir uma análise e verificar quais entradas, parâmetro
 - [x] interface Streamlit;
 - [x] documentação final;
 - [x] preparar release v0.6.0;
-- [ ] CI verde, merge e tag.
+- [x] CI verde, merge e tag.
 
 ### O que não deve entrar junto
 
