@@ -86,9 +86,15 @@ def build_example_manifest(
             metadata_path
         ),
         parameters={
+            "input_format": "fasta",
             "min_similarity": 95.0,
             "allow_n": True,
             "top_n": top_n,
+            "min_mean_quality": None,
+            "min_length": None,
+            "max_length": None,
+            "trim_ends": None,
+            "trim_quality_threshold": None,
         },
         result={
             "total_sequences": 1,
@@ -115,7 +121,7 @@ def test_manifest_has_required_provenance(
 
     assert (
         manifest["schema_version"]
-        == "1.0"
+        == "1.1"
     )
 
     assert (

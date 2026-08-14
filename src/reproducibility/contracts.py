@@ -2,7 +2,10 @@
 
 from typing import Literal, TypedDict
 
-from src.contracts import AnalysisResult
+from src.contracts import (
+    AnalysisResult,
+    InputFormat,
+)
 
 
 RunStatus = Literal[
@@ -13,9 +16,17 @@ RunStatus = Literal[
 
 
 class AnalysisParameters(TypedDict):
+    input_format: InputFormat
+
     min_similarity: float
     allow_n: bool
     top_n: int
+
+    min_mean_quality: float | None
+    min_length: int | None
+    max_length: int | None
+    trim_ends: bool | None
+    trim_quality_threshold: int | None
 
 
 class InputSnapshot(TypedDict):

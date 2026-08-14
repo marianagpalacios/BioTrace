@@ -33,10 +33,13 @@ from src.reproducibility.hashing import (
 from src.version import __version__
 
 
-MANIFEST_SCHEMA_VERSION = "1.0"
+MANIFEST_SCHEMA_VERSION = "1.1"
 
 
 _RESULT_HASH_FIELDS = (
+    "input_format",
+    "quality_summary",
+    "quality_report",
     "summary",
     "total_sequences",
     "valid_count",
