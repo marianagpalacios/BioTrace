@@ -2,8 +2,8 @@
 
 > Plataforma open source para análise automatizada de DNA ambiental (eDNA), identificação taxonômica simplificada e geração de indicadores iniciais de biodiversidade.
 
-**Versão em desenvolvimento:** MVP v0.6.0
-**Foco da versão:** leitura FASTQ, controle de qualidade Phred, trimming terminal e reprodutibilidade dos parâmetros de QC.
+**Versão atual:** MVP v0.6.0
+**Foco da versão:** FASTQ e controle de qualidade baseado em escores Phred.
 
 ---
 

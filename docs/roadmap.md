@@ -150,7 +150,7 @@ Outra pessoa poderá repetir uma análise e verificar quais entradas, parâmetro
 - [x] testes automatizados;
 - [x] interface Streamlit;
 - [x] documentação final;
-- [ ] preparar release v0.6.0;
+- [x] preparar release v0.6.0;
 - [ ] CI verde, merge e tag.
 
 ### O que não deve entrar junto
