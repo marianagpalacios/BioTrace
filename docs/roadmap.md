@@ -161,26 +161,25 @@ DADA2, QIIME 2 e pipelines completos devem permanecer fora até o controle de qu
 
 ## MVP v0.7.0 — Orientação e alinhamento biológico
 
-**Foco:** melhorar a validade da comparação.
+**Status:** concluído.
 
-### Objetivos
-
-- complemento reverso;
-- estratégia selecionável;
-- alinhamento global ou local;
-- configuração de gaps;
-- cobertura do alinhamento;
-- identidade e cobertura separadas;
-- testes com sequências biologicamente comparáveis;
-- avaliação de desempenho.
-
-### Possível integração
-
-BLAST pode ser introduzido após existir um contrato estável para mecanismos de busca e comparação.
+- [x] representar explicitamente a orientação de sequências;
+- [x] implementar complemento reverso;
+- [x] implementar alinhamento par a par;
+- [x] calcular identidade e cobertura;
+- [x] resolver orientação por comparação de alinhamentos;
+- [x] integrar alinhamento ao ranking taxonômico;
+- [x] integrar ao fluxo compartilhado FASTA/FASTQ;
+- [x] registrar parâmetros de alinhamento no manifesto;
+- [x] atualizar o schema de reprodutibilidade para `1.2`;
+- [x] validar parâmetros durante reprodução;
+- [x] adicionar testes automatizados;
 
 ---
 
 ## MVP v0.8.0 — Integração com BLAST e bancos maiores
+
+**Status:** planejado.
 
 **Foco:** busca taxonômica mais realista.
 

@@ -20,6 +20,11 @@ if str(PROJECT_ROOT) not in sys.path:
 
 
 from src.config import (  # noqa: E402
+    DEFAULT_ALIGNMENT_EXTEND_GAP_SCORE,
+    DEFAULT_ALIGNMENT_MATCH_SCORE,
+    DEFAULT_ALIGNMENT_MISMATCH_SCORE,
+    DEFAULT_ALIGNMENT_MODE,
+    DEFAULT_ALIGNMENT_OPEN_GAP_SCORE,
     DEFAULT_FASTQ_MAX_LENGTH,
     DEFAULT_FASTQ_MIN_LENGTH,
     DEFAULT_FASTQ_MIN_MEAN_QUALITY,
@@ -94,6 +99,40 @@ def fail(
     )
 
     return 1
+
+
+def _validate_alignment_parameters(
+    parameters: dict[str, object],
+) -> None:
+    """Ensure the manifest uses the current alignment configuration."""
+    expected = {
+        "alignment_mode": DEFAULT_ALIGNMENT_MODE,
+        "alignment_match_score": (
+            DEFAULT_ALIGNMENT_MATCH_SCORE
+        ),
+        "alignment_mismatch_score": (
+            DEFAULT_ALIGNMENT_MISMATCH_SCORE
+        ),
+        "alignment_open_gap_score": (
+            DEFAULT_ALIGNMENT_OPEN_GAP_SCORE
+        ),
+        "alignment_extend_gap_score": (
+            DEFAULT_ALIGNMENT_EXTEND_GAP_SCORE
+        ),
+    }
+
+    for parameter_name, expected_value in expected.items():
+        recorded_value = parameters.get(
+            parameter_name
+        )
+
+        if recorded_value != expected_value:
+            raise ValueError(
+                "Alignment parameter mismatch for "
+                f"{parameter_name!r}: "
+                f"manifest={recorded_value!r}, "
+                f"current={expected_value!r}."
+            )
 
 
 def main() -> int:
@@ -174,6 +213,10 @@ def main() -> int:
     parameters = original[
         "parameters"
     ]
+
+    _validate_alignment_parameters(
+        parameters
+    )
 
     input_format = parameters[
         "input_format"

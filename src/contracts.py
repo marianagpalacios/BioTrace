@@ -1,5 +1,6 @@
 """Typed contracts shared by BioTrace services."""
 
+from enum import IntEnum
 from typing import Any, Literal, TypedDict
 
 
@@ -7,6 +8,14 @@ InputFormat = Literal[
     "fasta",
     "fastq",
 ]
+
+
+class SequenceOrientation(IntEnum):
+    """Explicit orientation contract for nucleotide sequences."""
+
+    REVERSE = -1
+    UNKNOWN = 0
+    FORWARD = 1
 
 
 class AnalysisResult(TypedDict, total=False):

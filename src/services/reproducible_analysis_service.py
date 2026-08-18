@@ -5,6 +5,11 @@ from time import perf_counter
 
 from src.config import (
     DEFAULT_ALLOW_N,
+    DEFAULT_ALIGNMENT_EXTEND_GAP_SCORE,
+    DEFAULT_ALIGNMENT_MATCH_SCORE,
+    DEFAULT_ALIGNMENT_MISMATCH_SCORE,
+    DEFAULT_ALIGNMENT_MODE,
+    DEFAULT_ALIGNMENT_OPEN_GAP_SCORE,
     DEFAULT_FASTQ_MAX_LENGTH,
     DEFAULT_FASTQ_MIN_LENGTH,
     DEFAULT_FASTQ_MIN_MEAN_QUALITY,
@@ -51,6 +56,11 @@ def _analysis_parameters(
     max_length: int,
     trim_ends: bool,
     trim_quality_threshold: int,
+    alignment_mode: str,
+    alignment_match_score: float,
+    alignment_mismatch_score: float,
+    alignment_open_gap_score: float,
+    alignment_extend_gap_score: float,
 ) -> AnalysisParameters:
     """Build a format-aware parameter snapshot."""
 
@@ -67,6 +77,29 @@ def _analysis_parameters(
             "max_length": None,
             "trim_ends": None,
             "trim_quality_threshold": None,
+            "alignment_mode": (
+                alignment_mode
+            ),
+            "alignment_match_score": (
+                float(
+                    alignment_match_score
+                )
+            ),
+            "alignment_mismatch_score": (
+                float(
+                    alignment_mismatch_score
+                )
+            ),
+            "alignment_open_gap_score": (
+                float(
+                    alignment_open_gap_score
+                )
+            ),
+            "alignment_extend_gap_score": (
+                float(
+                    alignment_extend_gap_score
+                )
+            ),
         }
 
     return {
@@ -84,6 +117,29 @@ def _analysis_parameters(
         "trim_ends": bool(trim_ends),
         "trim_quality_threshold": int(
             trim_quality_threshold
+        ),
+        "alignment_mode": (
+            alignment_mode
+        ),
+        "alignment_match_score": (
+            float(
+                alignment_match_score
+            )
+        ),
+        "alignment_mismatch_score": (
+            float(
+                alignment_mismatch_score
+            )
+        ),
+        "alignment_open_gap_score": (
+            float(
+                alignment_open_gap_score
+            )
+        ),
+        "alignment_extend_gap_score": (
+            float(
+                alignment_extend_gap_score
+            )
         ),
     }
 
@@ -130,6 +186,21 @@ def analyze_sequence_file_reproducibly(
         trim_ends=trim_ends,
         trim_quality_threshold=(
             trim_quality_threshold
+        ),
+        alignment_mode=(
+            DEFAULT_ALIGNMENT_MODE
+        ),
+        alignment_match_score=(
+            DEFAULT_ALIGNMENT_MATCH_SCORE
+        ),
+        alignment_mismatch_score=(
+            DEFAULT_ALIGNMENT_MISMATCH_SCORE
+        ),
+        alignment_open_gap_score=(
+            DEFAULT_ALIGNMENT_OPEN_GAP_SCORE
+        ),
+        alignment_extend_gap_score=(
+            DEFAULT_ALIGNMENT_EXTEND_GAP_SCORE
         ),
     )
 

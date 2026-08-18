@@ -2,8 +2,8 @@
 
 > Plataforma open source para análise automatizada de DNA ambiental (eDNA), identificação taxonômica simplificada e geração de indicadores iniciais de biodiversidade.
 
-**Versão atual:** MVP v0.6.0
-**Foco da versão:** FASTQ e controle de qualidade baseado em escores Phred.
+**Versão atual:** MVP v0.7.0
+**Foco da versão:** orientação de sequências e alinhamento biológico.
 
 ---
 
@@ -26,24 +26,23 @@ O objetivo atual não é substituir ferramentas consolidadas, como BLAST, Kraken
 
 ---
 
-## Escopo do MVP v0.6.0
+## Escopo do MVP v0.7.0
 
-O MVP v0.6.0 aproxima a entrada do BioTrace de dados de sequenciamento ao adicionar FASTQ e controle de qualidade Phred, preservando a análise FASTA e a proveniência introduzida no v0.5.0.
+O MVP v0.7.0 passa a tratar explicitamente a orientação de sequências antes da classificação e substitui a comparação posicional pelo alinhamento par a par, preservando os fluxos FASTA, FASTQ e de reprodutibilidade dos MVPs anteriores.
 
 ### Entregas desta versão
 
-- leitura de `.fastq` e `.fq` com escores Phred;
-- métricas de qualidade média, Q20 e Q30;
-- trimming de baixa qualidade nas extremidades 5' e 3';
-- filtragem por comprimento e qualidade média;
-- relatório auditável de reads aprovados e rejeitados;
-- download do relatório de QC em CSV;
-- classificação dos reads aprovados pelo banco COI-5P;
-- manifesto schema `1.1` com formato e parâmetros de QC;
-- fingerprint e hash dos resultados sensíveis ao controle de qualidade;
-- reprodução de execuções FASTA e FASTQ;
-- exemplo FASTQ determinístico e testes automatizados;
-- controles e métricas FASTQ na interface Streamlit.
+- representação explícita de orientação forward, reverse complement e unknown;
+- geração de complemento reverso;
+- resolução automática de orientação por alinhamento;
+- alinhamento par a par com `Biopython PairwiseAligner`;
+- cálculo de score de alinhamento, identidade e cobertura;
+- ranking de referências baseado em alinhamento;
+- suporte a sequências recebidas na orientação reversa;
+- integração com o fluxo compartilhado FASTA/FASTQ;
+- registro dos parâmetros de alinhamento no manifesto reproduzível;
+- schema de manifesto atualizado para `1.2`;
+- validação dos parâmetros científicos durante reprodução.
 
 > Dez referências não constituem um banco taxonômico abrangente. O dataset foi construído para permitir estudo controlado e reprodutível dos componentes do BioTrace.
 
@@ -550,9 +549,6 @@ A versão atual usa configuração em código. Arquivo externo de configuração
 - ausência de denoising e remoção de quimeras;
 - ausência de inferência de ASVs e agrupamento em OTUs;
 - ausência de suporte a `FASTQ.gz`;
-- ausência de complemento reverso;
-- ausência de orientação automática;
-- ausência de alinhamento biológico;
 - ausência de BLAST;
 - comparação exaustiva com todas as referências;
 - ausência de ambiente hermético ou container versionado;
@@ -565,7 +561,7 @@ A versão atual usa configuração em código. Arquivo externo de configuração
 
 ## Próxima versão
 
-Após o fechamento do v0.6.0, o MVP v0.7.0 será dedicado à orientação de sequências e ao alinhamento biológico.
+O MVP v0.8.0 permanece planejado. Seu escopo será revisado após o fechamento do v0.7.0.
 
 Consulte [`docs/roadmap.md`](docs/roadmap.md) para o plano completo.
 

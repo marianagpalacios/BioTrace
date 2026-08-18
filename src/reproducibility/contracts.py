@@ -28,6 +28,14 @@ class AnalysisParameters(TypedDict):
     trim_ends: bool | None
     trim_quality_threshold: int | None
 
+    alignment_mode: str
+
+    alignment_match_score: float
+    alignment_mismatch_score: float
+
+    alignment_open_gap_score: float
+    alignment_extend_gap_score: float
+
 
 class InputSnapshot(TypedDict):
     filename: str
