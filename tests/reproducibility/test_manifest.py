@@ -95,6 +95,11 @@ def build_example_manifest(
             "max_length": None,
             "trim_ends": None,
             "trim_quality_threshold": None,
+            "alignment_mode": "global",
+            "alignment_match_score": 2.0,
+            "alignment_mismatch_score": -1.0,
+            "alignment_open_gap_score": -2.0,
+            "alignment_extend_gap_score": -0.5,
         },
         result={
             "total_sequences": 1,
@@ -121,7 +126,7 @@ def test_manifest_has_required_provenance(
 
     assert (
         manifest["schema_version"]
-        == "1.1"
+        == "1.2"
     )
 
     assert (

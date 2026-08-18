@@ -214,4 +214,34 @@ def test_reproducible_fastq_records_qc_parameters(
     assert parameters["max_length"] == 800
     assert parameters["trim_ends"] is True
     assert parameters["trim_quality_threshold"] == 20
+    assert (
+        parameters[
+            "alignment_mode"
+        ]
+        == "global"
+    )
+    assert (
+        parameters[
+            "alignment_match_score"
+        ]
+        == 2.0
+    )
+    assert (
+        parameters[
+            "alignment_mismatch_score"
+        ]
+        == -1.0
+    )
+    assert (
+        parameters[
+            "alignment_open_gap_score"
+        ]
+        == -2.0
+    )
+    assert (
+        parameters[
+            "alignment_extend_gap_score"
+        ]
+        == -0.5
+    )
     assert result["quality_summary"]["passed_records"] == 1

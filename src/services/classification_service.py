@@ -113,6 +113,32 @@ def analyze_valid_sequences(
                 "Melhor similaridade (%)": (
                     classification["similarity"]
                 ),
+                "Orientação": (
+                    classification.get(
+                        "orientation",
+                        0,
+                    )
+                ),
+                "Score de alinhamento": (
+                    classification.get(
+                        "alignment_score",
+                        0.0,
+                    )
+                ),
+                "Identidade do alinhamento (%)": (
+                    classification.get(
+                        "alignment_identity",
+                        classification[
+                            "similarity"
+                        ],
+                    )
+                ),
+                "Cobertura do alinhamento (%)": (
+                    classification.get(
+                        "alignment_coverage",
+                        0.0,
+                    )
+                ),
                 "Referência escolhida": (
                     classification["reference_id"]
                     or "-"
