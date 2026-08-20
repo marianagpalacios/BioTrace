@@ -132,7 +132,7 @@ def test_manifest_has_required_provenance(
 
     assert (
         manifest["schema_version"]
-        == "1.3"
+        == "1.4"
     )
 
     assert (

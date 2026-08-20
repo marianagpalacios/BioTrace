@@ -207,20 +207,25 @@ Bancos online em tempo de execução devem ser opcionais. A execução reproduz�
 
 ## v0.9.0 — Indicadores e relatórios
 
-**Status:** planejado.
+**Status:** concluído.
 
 **Foco:** transformar classificações em resultados analisáveis.
 
 ### Objetivos
 
-- abundância de sequências;
-- tabelas por táxon;
-- filtros;
-- índices ecológicos introdutórios;
-- relatório HTML;
-- metadados da amostra;
-- exportação estruturada;
-- explicação das limitações de inferir abundância a partir de reads.
+- [x] indicadores gerais;
+- [x] indicadores FASTQ/QC;
+- [x] resumo taxonômico;
+- [x] métricas de busca;
+- [x] métricas de desempenho e cache;
+- [x] warnings;
+- [x] relatório estruturado;
+- [x] exportação JSON;
+- [x] exportação CSV;
+- [x] exportação Markdown;
+- [x] reprodutibilidade schema `1.4`;
+- [x] testes de reporting;
+- [x] documentação.
 
 ---
 

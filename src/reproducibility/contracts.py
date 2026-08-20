@@ -1,6 +1,6 @@
 """Typed contracts for run reproducibility."""
 
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 from src.contracts import (
     AnalysisResult,
@@ -112,6 +112,20 @@ class RunManifest(TypedDict):
 
     result_sha256: str | None
     error: str | None
+
+    report_version: NotRequired[str | None]
+    report_indicators: NotRequired[
+        dict[str, object] | None
+    ]
+    report_warnings: NotRequired[
+        list[str] | None
+    ]
+    report_exports: NotRequired[
+        list[dict[str, object]] | None
+    ]
+    analysis_duration_seconds: NotRequired[
+        float | None
+    ]
 
 
 class ReproducibleAnalysisResult(
