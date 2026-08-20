@@ -2,8 +2,8 @@
 
 > Plataforma open source para análise automatizada de DNA ambiental (eDNA), identificação taxonômica simplificada e geração de indicadores iniciais de biodiversidade.
 
-**Versão atual:** MVP v0.8.0 em desenvolvimento
-**Foco da versão:** BLAST local, bancos maiores e busca reproduzível.
+**Versão atual:** MVP v0.9.0
+**Foco da versão:** indicadores, relatórios estruturados e exportações reproduzíveis.
 
 ---
 
@@ -168,6 +168,25 @@ Para cada sequência:
 - controles de qualidade FASTQ;
 - métricas e relatório por read;
 - download do relatório de QC em CSV.
+
+### Indicadores e relatórios
+
+O BioTrace também consolida os resultados da análise em um relatório estruturado com:
+
+- indicadores gerais;
+- resumo taxonômico;
+- indicadores de qualidade FASTQ;
+- identidade e cobertura;
+- métricas BLAST quando aplicáveis;
+- desempenho e cache;
+- warnings objetivos.
+
+Os resultados podem ser exportados em JSON, CSV e Markdown.
+
+Consulte:
+
+- [`docs/reporting.md`](docs/reporting.md);
+- [`docs/indicators.md`](docs/indicators.md).
 
 ---
 
