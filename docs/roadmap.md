@@ -229,9 +229,21 @@ Bancos online em tempo de execução devem ser opcionais. A execução reproduz�
 
 ---
 
-## v1.0.0 — Estabilização e organização
+## v1.0.0 — Estabilização e release
 
-**Status:** planejado.
+**Status:** em desenvolvimento.
+
+### Objetivos
+
+- estabilizar o projeto;
+- revisar arquitetura e organização;
+- melhorar mensagens de erro;
+- revisar experiência de uso;
+- executar testes finais;
+- concluir documentação;
+- preparar a primeira release estável.
+
+### Critérios de estabilidade
 
 O BioTrace poderá ser considerado uma primeira versão estável quando possuir:
 
