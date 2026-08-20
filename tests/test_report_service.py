@@ -24,7 +24,7 @@ def test_build_analysis_report():
         total_duration_seconds=0.5,
     )
 
-    assert report.metadata.biotrace_version == "1.0.0-dev"
+    assert report.metadata.biotrace_version == "1.0.0"
     assert report.metadata.input_format == "fasta"
     assert report.metadata.search_backend == "pairwise"
 

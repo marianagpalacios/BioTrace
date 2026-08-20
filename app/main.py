@@ -61,9 +61,9 @@ st.set_page_config(
 st.title("🌿 BioTrace")
 
 st.write(
-    "MVP para análise de arquivos FASTA com validação, "
-    "estatísticas, classificação por banco local "
-    "e rastreabilidade."
+    "Análise de arquivos FASTA e FASTQ com validação, "
+    "controle de qualidade, busca em banco local, "
+    "classificação e rastreabilidade."
 )
 
 
@@ -219,10 +219,14 @@ with st.sidebar:
         )
 
     st.caption(
-        "A similaridade usa distância de edição "
-        "normalizada. Ela considera substituições, "
-        "inserções e deleções simples, mas não "
-        "substitui um alinhamento biológico."
+        "O limiar mínimo é aplicado à identidade "
+        "calculada pelo mecanismo de busca selecionado. "
+        "Backend de busca: "
+        + (
+            "BLAST local."
+            if search_backend == "blast"
+            else "alinhamento pairwise."
+        )
     )
 
 
@@ -251,6 +255,17 @@ if uploaded_file:
             ".fq",
         }
         else "fasta"
+    )
+
+    st.caption(
+        f"Arquivo selecionado: `{uploaded_file.name}` | "
+        f"Formato detectado: {input_format.upper()} | "
+        "Backend de busca: "
+        + (
+            "BLAST local"
+            if search_backend == "blast"
+            else "alinhamento pairwise"
+        )
     )
 
     temp_suffix = (
@@ -933,8 +948,25 @@ if uploaded_file:
         + remaining_result_columns
     ]
 
+    display_results_df = results_df.copy()
+
+    for optional_blast_column in (
+        "E-value",
+        "Bit score",
+    ):
+        if optional_blast_column in display_results_df.columns:
+            display_results_df[optional_blast_column] = (
+                display_results_df[optional_blast_column].apply(
+                    lambda value: (
+                        "N/A"
+                        if pd.isna(value)
+                        else value
+                    )
+                )
+            )
+
     st.dataframe(
-        results_df,
+        display_results_df,
         use_container_width=True,
         hide_index=True,
     )

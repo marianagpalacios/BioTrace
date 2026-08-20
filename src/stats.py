@@ -4,6 +4,8 @@ from src.fasta import SequenceRecord
 
 
 def sequence_length(sequence: str) -> int:
+    """Return the number of nucleotides in a sequence."""
+
     return len(sequence)
 
 
@@ -28,6 +30,8 @@ def nucleotide_frequency(
 
 
 def gc_content(sequence: str) -> float:
+    """Return the percentage of guanine and cytosine nucleotides."""
+
     normalized = sequence.upper()
 
     gc = normalized.count("G") + normalized.count("C")
@@ -36,6 +40,8 @@ def gc_content(sequence: str) -> float:
 
 
 def at_content(sequence: str) -> float:
+    """Return the percentage of adenine and thymine nucleotides."""
+
     normalized = sequence.upper()
 
     at = normalized.count("A") + normalized.count("T")
@@ -64,6 +70,8 @@ def sequence_composition(
 def summarize_sequences(
     sequences: list[SequenceRecord],
 ) -> dict[str, object]:
+    """Aggregate length and nucleotide-composition statistics."""
+
     lengths = [
         len(item["sequence"])
         for item in sequences

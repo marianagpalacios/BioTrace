@@ -231,17 +231,19 @@ Bancos online em tempo de execução devem ser opcionais. A execução reproduz�
 
 ## v1.0.0 — Estabilização e release
 
-**Status:** em desenvolvimento.
+**Status:** concluído.
 
 ### Objetivos
 
-- estabilizar o projeto;
-- revisar arquitetura e organização;
-- melhorar mensagens de erro;
-- revisar experiência de uso;
-- executar testes finais;
-- concluir documentação;
-- preparar a primeira release estável.
+- [x] estabilizar o projeto;
+- [x] revisar arquitetura e organização;
+- [x] melhorar mensagens de erro;
+- [x] revisar experiência de uso;
+- [x] executar testes finais e casos extremos;
+- [x] validar instalação limpa e CI;
+- [x] concluir documentação e guia operacional;
+- [x] formalizar a licença MIT;
+- [x] preparar a primeira release estável.
 
 ### Critérios de estabilidade
 

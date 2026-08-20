@@ -1,6 +1,6 @@
 # Módulos do BioTrace
 
-Este documento descreve as responsabilidades dos módulos até o MVP v0.8.0.
+Este documento descreve as responsabilidades dos módulos na v1.0.0.
 
 ---
 
@@ -189,9 +189,9 @@ Distância de Levenshtein com memória otimizada por linhas.
 - tempo: `O(n × m)`;
 - memória: `O(min(n, m))`.
 
-### Limitação
+### Observação
 
-Não realiza alinhamento biológico.
+Permanece como utilitário legado e de regressão. A classificação principal usa os backends em `src/search/`.
 
 ---
 
@@ -570,7 +570,7 @@ Define `TypedDict` para parâmetros, entrada, referência, software, ambiente, c
 
 ## `src/reproducibility/manifest.py`
 
-Coleta snapshots, cria UUID, timestamps e fingerprint, calcula o hash dos resultados e grava ou carrega JSON. O schema `1.3` registra a configuração de busca do v0.8 e mantém formato, parâmetros de qualidade e configuração de alinhamento das versões anteriores.
+Coleta snapshots, cria UUID, timestamps e fingerprint, calcula o hash dos resultados e grava ou carrega JSON. O schema `1.4` registra configuração de busca, reporting, warnings, exports e duração, mantendo formato, parâmetros de qualidade e alinhamento das versões anteriores.
 
 ## `src/version.py`
 

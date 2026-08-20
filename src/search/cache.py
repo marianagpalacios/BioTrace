@@ -9,12 +9,16 @@ from src.search.contracts import SearchParameters
 
 
 def sha256_text(value: str) -> str:
+    """Calculate the SHA-256 digest of a UTF-8 string."""
+
     return hashlib.sha256(
         value.encode("utf-8")
     ).hexdigest()
 
 
 def sha256_file(path: Path) -> str:
+    """Calculate the SHA-256 digest of a file."""
+
     digest = hashlib.sha256()
 
     with path.open("rb") as file:
@@ -36,6 +40,8 @@ def build_search_cache_key(
     blast_version: str | None,
     biotrace_version: str,
 ) -> str:
+    """Build a stable cache key from the scientific search configuration."""
+
     payload = {
         "sequence_sha256": (
             sha256_text(
@@ -60,6 +66,8 @@ def build_search_cache_key(
 
 @dataclass(frozen=True)
 class CacheLookupResult:
+    """Represent a cache lookup without conflating a miss with a null value."""
+
     value: object | None
     hit: bool
 
@@ -76,7 +84,7 @@ class SearchCache:
     def get(
         self,
         key: str,
-    ):
+    ) -> object | None:
         return self._entries.get(key)
 
     def lookup(
@@ -97,7 +105,7 @@ class SearchCache:
     def set(
         self,
         key: str,
-        value,
+        value: object,
     ) -> None:
         self._entries[key] = value
 

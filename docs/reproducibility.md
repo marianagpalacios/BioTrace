@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-O MVP v0.5.0 introduziu rastreabilidade para cada execução do BioTrace. O MVP v0.6.0 amplia esse contrato para FASTQ e controle de qualidade, registrando formato, parâmetros Phred, trimming e métricas de QC.
+O BioTrace registra a proveniência de execuções FASTA e FASTQ, incluindo qualidade, busca, reporting e ambiente computacional.
 
 ## Run ID
 
@@ -45,7 +45,7 @@ Os manifestos são gravados em `runs/`. Apenas `runs/.gitkeep` é versionado; os
 
 ## Versão do schema
 
-O MVP v0.6.0 utiliza o schema `1.1`.
+A v1.0.0 utiliza o schema `1.4`.
 
 ```text
 schema 1.0
@@ -55,6 +55,15 @@ schema 1.1
 → formato da entrada
 → parâmetros FASTQ
 → resumo e relatório de QC no hash dos resultados
+
+schema 1.2
+→ orientação e alinhamento
+
+schema 1.3
+→ backend, BLAST, banco, timeout e cache
+
+schema 1.4
+→ indicadores, warnings, exports e duração da análise
 ```
 
 O script de reprodução recusa manifestos de schema incompatível e orienta o uso da versão do BioTrace registrada na execução.
@@ -95,7 +104,7 @@ O pipeline encontrou um erro que impediu a conclusão. O wrapper tenta persistir
 
 Hashes são usados para detectar alterações nos artefatos. O hash dos resultados considera apenas campos científicos estáveis e exclui valores voláteis como UUID, timestamps e duração.
 
-No schema `1.1`, o hash dos resultados também considera:
+O hash dos resultados também considera:
 
 - `input_format`;
 - `quality_summary`;

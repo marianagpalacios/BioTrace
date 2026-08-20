@@ -2,6 +2,7 @@ from pathlib import Path
 
 from src.reference.database import ReferenceDatabase
 from src.search.blast_backend import LocalBlastBackend
+from src.search.contracts import SearchBackend
 from src.search.pairwise_backend import PairwiseAlignmentBackend
 
 
@@ -10,7 +11,7 @@ def create_search_backend(
     *,
     reference_database: ReferenceDatabase,
     blast_database_path: str | Path | None = None,
-):
+) -> SearchBackend:
     """Create a configured search backend."""
 
     normalized_name = (

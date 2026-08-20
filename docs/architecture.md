@@ -4,7 +4,7 @@
 
 O BioTrace foi projetado para evoluir de forma incremental, sem antecipar a complexidade de ferramentas maduras de Bioinformática.
 
-A arquitetura do MVP v0.6.0 prioriza:
+A arquitetura da v1.0.0 prioriza:
 
 - responsabilidade única;
 - baixo acoplamento;
@@ -46,13 +46,17 @@ A arquitetura do MVP v0.6.0 prioriza:
                        v
               Classification Service
                        |
-             +---------+---------+
-             |                   |
-             v                   v
-          Statistics       ReferenceDatabase
-                                  |
-                                  v
-                              Taxonomy
+                       v
+                  SearchBackend
+                 /             \
+                v               v
+          Pairwise          BLAST local
+                 \             /
+                  v           v
+                 SearchHit ranking
+                       |
+                       v
+             Reporting + Manifest
 ```
 
 O `Reproducible Analysis Service` envolve a execução com proveniência, hashing e manifesto. O `Sequence Analysis Dispatcher` encaminha cada entrada para o serviço correspondente.
@@ -275,17 +279,15 @@ O validador de curadoria aplica as regras do banco COI-5P: colunas científicas 
 
 O validador de metadata confere versão, marcador, fonte, contagens e o SHA-256 do CSV. `ReferenceDatabase.from_files()` somente disponibiliza a base após todas essas etapas.
 
-### 4.6 Similaridade
+### 4.6 Busca e alinhamento
 
-A distância de Levenshtein calcula o menor número de inserções, deleções e substituições.
-
-A pontuação é normalizada pelo comprimento da maior sequência.
+O backend pairwise usa alinhamento biológico para resolver orientação, identidade, cobertura e score. O backend BLAST executa `blastn` local e acrescenta e-value e bit score. Ambos retornam `SearchHit` e obedecem ao mesmo ranking normalizado.
 
 ### 4.7 Classificação
 
-`src/taxonomy.py`:
+`src/taxonomy.py` e `src/search/`:
 
-1. compara a consulta com cada referência;
+1. executam a busca no backend selecionado;
 2. conserva a melhor referência de cada espécie;
 3. ordena as espécies;
 4. limita o ranking;
@@ -375,13 +377,13 @@ Essa separação permite que FASTA e FASTQ compartilhem a mesma classificação 
 
 **Trade-off:** bancos imperfeitos exigem correção antes da execução.
 
-### ADR-005 — Distância de edição no MVP
+### ADR-005 — Backends intercambiáveis
 
-**Decisão:** usar Levenshtein em vez de comparação posicional.
+**Decisão:** preservar alinhamento pairwise e BLAST local sob o contrato `SearchBackend`.
 
-**Benefício:** trata indels simples e possui implementação compreensível.
+**Benefício:** FASTA e FASTQ compartilham classificação e resultados normalizados.
 
-**Trade-off:** não representa adequadamente todos os fenômenos biológicos.
+**Trade-off:** BLAST exige executável e banco externos; o pairwise não escala para bancos grandes.
 
 ### ADR-006 — Configuração em Python
 
@@ -485,11 +487,9 @@ A suíte atual cobre funções e componentes isolados:
 
 Lacunas:
 
-- teste integrado do serviço;
-- teste automatizado da interface;
-- teste de desempenho;
-- teste com arquivos grandes;
-- teste de compatibilidade entre versões do Python.
+- teste automatizado da interface Streamlit;
+- benchmark formal com arquivos e bancos grandes;
+- ambiente hermético ou imagem de container.
 
 ---
 
