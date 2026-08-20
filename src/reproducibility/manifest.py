@@ -349,6 +349,11 @@ def build_run_manifest(
     parameters: AnalysisParameters,
     result: dict[str, Any] | None,
     error: str | None = None,
+    report_version: str | None = None,
+    report_indicators: dict[str, object] | None = None,
+    report_warnings: list[str] | None = None,
+    report_exports: list[dict[str, object]] | None = None,
+    analysis_duration_seconds: float | None = None,
 ) -> RunManifest:
     """Create a complete execution manifest."""
 
@@ -422,6 +427,13 @@ def build_run_manifest(
             _result_sha256(result)
         ),
         "error": error,
+        "report_version": report_version,
+        "report_indicators": report_indicators,
+        "report_warnings": report_warnings,
+        "report_exports": report_exports,
+        "analysis_duration_seconds": (
+            analysis_duration_seconds
+        ),
     }
 
 

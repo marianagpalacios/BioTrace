@@ -63,3 +63,6 @@ class AnalysisResult(TypedDict, total=False):
     )
 
     execution_time_seconds: float
+
+    analysis_report: dict[str, Any]
+    report_export_paths: dict[str, str]

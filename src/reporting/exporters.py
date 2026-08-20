@@ -241,3 +241,33 @@ def build_export_metadata(
         )
 
     return exports
+
+
+def export_report_bundle(
+    report: AnalysisReport,
+    output_directory: str | Path,
+) -> dict[str, Path]:
+    """Export every structured report artifact for one analysis."""
+
+    directory = Path(output_directory)
+
+    paths = {
+        "analysis_report.json": export_report_json(
+            report,
+            directory / "analysis_report.json",
+        ),
+        "analysis_results.csv": export_results_csv(
+            report,
+            directory / "analysis_results.csv",
+        ),
+        "species_summary.csv": export_species_summary_csv(
+            report,
+            directory / "species_summary.csv",
+        ),
+        "analysis_report.md": export_report_markdown(
+            report,
+            directory / "analysis_report.md",
+        ),
+    }
+
+    return paths
