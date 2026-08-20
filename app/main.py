@@ -598,6 +598,133 @@ if uploaded_file:
                     "e alinhamento biológico local."
                 )
 
+    analysis_report = analysis.get(
+        "analysis_report"
+    )
+
+    if analysis_report:
+        with st.expander(
+            "Indicadores e relatório da análise",
+            expanded=True,
+        ):
+            indicators = analysis_report[
+                "indicators"
+            ]
+            indicator_columns = st.columns(4)
+
+            indicator_columns[0].metric(
+                "Taxa de validação",
+                f"{indicators['validation_rate']:.2f}%",
+            )
+            indicator_columns[1].metric(
+                "Taxa de identificação",
+                f"{indicators['identification_rate']:.2f}%",
+            )
+            indicator_columns[2].metric(
+                "Espécies observadas",
+                analysis_report["taxonomy"][
+                    "observed_species_count"
+                ],
+            )
+            indicator_columns[3].metric(
+                "Cache hit",
+                f"{analysis_report['performance']['cache_hit_rate']:.2f}%",
+            )
+
+            search_indicators = analysis_report[
+                "search"
+            ]
+            search_columns = st.columns(4)
+
+            search_columns[0].metric(
+                "Identidade média",
+                (
+                    f"{search_indicators['mean_identity']:.2f}%"
+                    if search_indicators["mean_identity"] is not None
+                    else "N/A"
+                ),
+            )
+            search_columns[1].metric(
+                "Cobertura média",
+                (
+                    f"{search_indicators['mean_coverage']:.2f}%"
+                    if search_indicators["mean_coverage"] is not None
+                    else "N/A"
+                ),
+            )
+            search_columns[2].metric(
+                "E-value médio",
+                search_indicators["mean_evalue"]
+                if search_indicators["mean_evalue"] is not None
+                else "N/A",
+            )
+            search_columns[3].metric(
+                "Bit score médio",
+                search_indicators["mean_bit_score"]
+                if search_indicators["mean_bit_score"] is not None
+                else "N/A",
+            )
+
+            for report_warning in analysis_report.get(
+                "warnings",
+                [],
+            ):
+                st.warning(report_warning)
+
+            report_export_paths = analysis.get(
+                "report_export_paths",
+                {},
+            )
+
+            report_downloads = (
+                (
+                    "analysis_report.json",
+                    "Baixar relatório JSON",
+                    "application/json",
+                ),
+                (
+                    "analysis_results.csv",
+                    "Baixar resultados CSV",
+                    "text/csv",
+                ),
+                (
+                    "species_summary.csv",
+                    "Baixar resumo por espécie",
+                    "text/csv",
+                ),
+                (
+                    "analysis_report.md",
+                    "Baixar relatório Markdown",
+                    "text/markdown",
+                ),
+            )
+            download_columns = st.columns(4)
+
+            for column, (
+                filename,
+                label,
+                mime,
+            ) in zip(
+                download_columns,
+                report_downloads,
+                strict=True,
+            ):
+                export_path = report_export_paths.get(
+                    filename
+                )
+
+                if export_path and Path(export_path).exists():
+                    column.download_button(
+                        label=label,
+                        data=Path(export_path).read_bytes(),
+                        file_name=filename,
+                        mime=mime,
+                        key=(
+                            f"report-{run_manifest['run_id']}-"
+                            f"{filename}"
+                        ),
+                    )
+
     for warning in analysis.get(
         "reference_warnings",
         [],

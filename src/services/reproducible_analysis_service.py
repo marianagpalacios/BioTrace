@@ -1,5 +1,6 @@
 """Reproducible wrapper around BioTrace sequence analysis services."""
 
+from dataclasses import asdict
 from pathlib import Path
 from time import perf_counter
 
@@ -21,7 +22,7 @@ from src.config import (
     DEFAULT_TOP_N,
     RUNS_DIRECTORY,
 )
-from src.contracts import InputFormat
+from src.contracts import AnalysisResult, InputFormat
 from src.logging_config import configure_logging
 from src.reproducibility.contracts import (
     AnalysisParameters,
@@ -34,6 +35,11 @@ from src.reproducibility.manifest import (
     utc_now_iso,
     write_run_manifest,
 )
+from src.reporting.exporters import (
+    build_export_metadata,
+    export_report_bundle,
+)
+from src.reporting.report_service import build_analysis_report
 from src.search.cache import SearchCache
 from src.services.analysis_service import (
     ProgressCallback,
@@ -44,6 +50,29 @@ from src.services.sequence_analysis_service import (
 
 
 LOGGER = configure_logging()
+
+
+def _quality_records(
+    result: AnalysisResult,
+) -> list[dict[str, object]] | None:
+    """Normalize the FASTQ QC report for reporting indicators."""
+
+    if result.get("input_format") != "fastq":
+        return None
+
+    return [
+        {
+            "mean_quality": row.get("mean_phred"),
+            "length": row.get("retained_length"),
+            "passed_qc": row.get("passed"),
+            "trimmed_bases": (
+                int(row.get("trimmed_left", 0))
+                + int(row.get("trimmed_right", 0))
+            ),
+        }
+        for row in result.get("quality_report", [])
+        if isinstance(row, dict)
+    ]
 
 
 def _analysis_parameters(
@@ -342,6 +371,58 @@ def analyze_sequence_file_reproducibly(
         - started_at
     )
 
+    analysis_results = list(
+        result.get("results", [])
+    )
+
+    identified_sequences = sum(
+        bool(row.get("Identificada"))
+        for row in analysis_results
+    )
+
+    report = build_analysis_report(
+        input_format=input_format,
+        search_backend=search_backend,
+        results=analysis_results,
+        total_sequences=int(
+            result.get("total_sequences", 0)
+        ),
+        valid_sequences=int(
+            result.get("valid_count", 0)
+        ),
+        identified_sequences=identified_sequences,
+        quality_records=_quality_records(result),
+        total_duration_seconds=float(
+            result.get(
+                "execution_time_seconds",
+                duration,
+            )
+        ),
+        warnings=list(
+            result.get("reference_warnings", [])
+        ),
+        generated_at=finished_at_utc,
+    )
+
+    report_payload = asdict(report)
+    report_directory = (
+        Path(manifest_directory)
+        / run_id
+    )
+    report_paths = export_report_bundle(
+        report,
+        report_directory,
+    )
+    report_exports = build_export_metadata(
+        list(report_paths.values())
+    )
+
+    result["analysis_report"] = report_payload
+    result["report_export_paths"] = {
+        name: str(path)
+        for name, path in report_paths.items()
+    }
+
     status: RunStatus = (
         "completed"
         if result.get(
@@ -366,6 +447,19 @@ def analyze_sequence_file_reproducibly(
         ),
         parameters=parameters,
         result=result,
+        report_version=report.metadata.biotrace_version,
+        report_indicators={
+            "general": report_payload["indicators"],
+            "taxonomy": report_payload["taxonomy"],
+            "quality": report_payload["quality"],
+            "search": report_payload["search"],
+            "performance": report_payload["performance"],
+        },
+        report_warnings=list(report.warnings),
+        report_exports=report_exports,
+        analysis_duration_seconds=(
+            report.performance.total_duration_seconds
+        ),
     )
 
     manifest_path = write_run_manifest(

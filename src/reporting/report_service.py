@@ -30,6 +30,7 @@ def build_analysis_report(
     search_errors: int = 0,
     search_timeouts: int = 0,
     warnings: list[str] | None = None,
+    generated_at: str | None = None,
 ) -> AnalysisReport:
     """Build a structured report from one BioTrace analysis."""
 
@@ -37,9 +38,12 @@ def build_analysis_report(
         biotrace_version=__version__,
         input_format=input_format,
         search_backend=search_backend,
-        generated_at=datetime.now(
-            timezone.utc
-        ).isoformat(),
+        generated_at=(
+            generated_at
+            or datetime.now(
+                timezone.utc
+            ).isoformat()
+        ),
     )
 
     indicators = calculate_analysis_indicators(
