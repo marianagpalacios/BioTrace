@@ -177,22 +177,27 @@ DADA2, QIIME 2 e pipelines completos devem permanecer fora até o controle de qu
 
 ---
 
-## MVP v0.8.0 — Integração com BLAST e bancos maiores
+## v0.8.0 — BLAST e bancos maiores
 
-**Status:** planejado.
+**Status:** concluído.
 
 **Foco:** busca taxonômica mais realista.
 
 ### Objetivos
 
-- adaptador para BLAST local;
-- criação e versionamento do índice;
-- parsing de hits;
-- identidade, cobertura e e-value;
-- cache;
-- tratamento de timeout;
-- comparação entre método didático e BLAST;
-- testes de integração controlados.
+- [x] manter o backend pairwise;
+- [x] integrar BLAST local;
+- [x] separar identidade, cobertura, e-value e bit score;
+- [x] criar contratos comuns de busca;
+- [x] construir e verificar bancos BLAST;
+- [x] registrar checksums dos índices;
+- [x] implementar timeout;
+- [x] implementar cache;
+- [x] integrar FASTA e FASTQ;
+- [x] atualizar manifesto para schema `1.3`;
+- [x] validar incompatibilidades na reprodução;
+- [x] adicionar testes automatizados;
+- [x] atualizar interface e documentação.
 
 ### Restrições
 
@@ -200,7 +205,9 @@ Bancos online em tempo de execução devem ser opcionais. A execução reproduz�
 
 ---
 
-## MVP v0.9.0 — Indicadores e relatórios
+## v0.9.0 — Indicadores e relatórios
+
+**Status:** planejado.
 
 **Foco:** transformar classificações em resultados analisáveis.
 
@@ -217,7 +224,9 @@ Bancos online em tempo de execução devem ser opcionais. A execução reproduz�
 
 ---
 
-## Versão v1.0.0 — Critérios sugeridos
+## v1.0.0 — Estabilização e organização
+
+**Status:** planejado.
 
 O BioTrace poderá ser considerado uma primeira versão estável quando possuir:
 

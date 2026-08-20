@@ -308,6 +308,39 @@ O serviço retorna um dicionário com:
 
 ---
 
+## 4.9 Busca de referências no v0.8
+
+```text
+FASTA / FASTQ
+      ↓
+validação + QC
+      ↓
+classification_service
+      ↓
+SearchBackend
+├── PairwiseAlignmentBackend
+└── LocalBlastBackend
+      ↓
+SearchHit
+      ↓
+ranking
+      ↓
+classificação
+      ↓
+reprodutibilidade
+```
+
+A camada `src/search/` separa o contrato de busca das implementações concretas:
+
+- `src/search/contracts.py` define os contratos comuns;
+- `src/search/pairwise_backend.py` adapta o alinhamento introduzido no v0.7;
+- `src/search/blast_backend.py` executa o `blastn` local com timeout e erros de domínio;
+- `src/search/blast_parser.py` interpreta a saída tabular e ordena os hits;
+- `src/search/cache.py` gera chaves reproduzíveis e mantém o cache de busca em memória;
+- `src/search/factory.py` seleciona o backend pairwise ou BLAST.
+
+Essa separação permite que FASTA e FASTQ compartilhem a mesma classificação normalizada sem conhecer os detalhes de execução de cada mecanismo.
+
 ## 5. Decisões arquiteturais
 
 ### ADR-001 — Manter Streamlit apenas como interface
@@ -465,12 +498,12 @@ Lacunas:
 A arquitetura já permite:
 
 - substituir o CSV por outra fonte dentro da camada de referência;
-- introduzir um alinhador sem alterar a interface;
+- adicionar novos backends por meio do contrato `SearchBackend`;
 - criar novos exportadores;
 - adicionar manifesto de execução;
 - criar uma CLI;
 - introduzir modelos tipados para respostas;
-- integrar BLAST como estratégia futura;
+- ampliar bancos BLAST mantendo índices e proveniência versionados;
 - adicionar FASTQ antes da validação taxonômica.
 
 ---

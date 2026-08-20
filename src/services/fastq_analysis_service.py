@@ -38,6 +38,7 @@ from src.reference.metadata import (
 from src.reference.validator import (
     ReferenceDatabaseValidationError,
 )
+from src.search.cache import SearchCache
 from src.services.analysis_service import (
     AnalysisError,
     ProgressCallback,
@@ -84,6 +85,12 @@ def analyze_fastq_file(
     trim_quality_threshold: int = (
         DEFAULT_FASTQ_TRIM_QUALITY
     ),
+    search_backend: str = "pairwise",
+    blast_database_path: str | None = None,
+    search_timeout_seconds: float = 30.0,
+    search_database_hash: str = "",
+    blast_version: str | None = None,
+    search_cache: SearchCache | None = None,
 ) -> AnalysisResult:
     """Run FASTQ parsing, QC and classification."""
 
@@ -222,6 +229,12 @@ def analyze_fastq_file(
             ),
             progress_start=0.55,
             progress_end=0.95,
+            search_backend=search_backend,
+            blast_database_path=blast_database_path,
+            search_timeout_seconds=search_timeout_seconds,
+            search_database_hash=search_database_hash,
+            blast_version=blast_version,
+            search_cache=search_cache,
         )
 
     except (

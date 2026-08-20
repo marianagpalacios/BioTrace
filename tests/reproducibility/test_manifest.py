@@ -100,6 +100,12 @@ def build_example_manifest(
             "alignment_mismatch_score": -1.0,
             "alignment_open_gap_score": -2.0,
             "alignment_extend_gap_score": -0.5,
+            "search_backend": "pairwise",
+            "search_timeout_seconds": 30.0,
+            "blast_version": None,
+            "blast_database_path": None,
+            "blast_database_sha256": None,
+            "cache_enabled": True,
         },
         result={
             "total_sequences": 1,
@@ -126,7 +132,7 @@ def test_manifest_has_required_provenance(
 
     assert (
         manifest["schema_version"]
-        == "1.2"
+        == "1.3"
     )
 
     assert (

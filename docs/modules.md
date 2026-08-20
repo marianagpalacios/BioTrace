@@ -1,6 +1,6 @@
 # Módulos do BioTrace
 
-Este documento descreve as responsabilidades dos módulos do MVP v0.6.0.
+Este documento descreve as responsabilidades dos módulos até o MVP v0.8.0.
 
 ---
 
@@ -279,6 +279,42 @@ O módulo calcula Phred médio, mínimo e máximo, Q20, Q30, comprimentos bruto 
 
 ---
 
+# Search
+
+## `src/search/contracts.py`
+
+Define:
+
+- `SearchParameters`;
+- `SearchHit`;
+- `SearchBackend`.
+
+## `src/search/pairwise_backend.py`
+
+Adapta o alinhamento pairwise introduzido no v0.7 ao contrato comum de busca.
+
+## `src/search/blast_backend.py`
+
+Executa buscas locais com NCBI BLAST+, com:
+
+- localização do executável;
+- execução sem `shell=True`;
+- timeout;
+- captura de erros;
+- parsing da saída.
+
+## `src/search/blast_parser.py`
+
+Converte a saída tabular do BLAST em `SearchHit` e aplica o ranking do v0.8.
+
+## `src/search/cache.py`
+
+Gera chaves reproduzíveis e mantém cache de resultados de busca.
+
+## `src/search/factory.py`
+
+Seleciona o backend `pairwise` ou `blast`.
+
 # Camada de referência
 
 ## `src/reference/loader.py`
@@ -530,11 +566,11 @@ Calcula SHA-256 de bytes e arquivos e serializa JSON de forma canônica para que
 
 ## `src/reproducibility/contracts.py`
 
-Define `TypedDict` para parâmetros, entrada, referência, software, ambiente, contagens, manifesto e resultado reproduzível. `AnalysisParameters` registra o formato e os parâmetros FASTQ; para FASTA, os campos exclusivos de qualidade permanecem como `None`.
+Define `TypedDict` para parâmetros, entrada, referência, software, ambiente, contagens, manifesto e resultado reproduzível. `AnalysisParameters` registra formato, qualidade, alinhamento, backend de busca, timeout, versão e banco BLAST e estado do cache; para FASTA, os campos exclusivos de qualidade permanecem como `None`.
 
 ## `src/reproducibility/manifest.py`
 
-Coleta snapshots, cria UUID, timestamps e fingerprint, calcula o hash dos resultados e grava ou carrega JSON. O schema `1.1` inclui o formato da entrada e considera `quality_summary` e `quality_report` no hash dos resultados.
+Coleta snapshots, cria UUID, timestamps e fingerprint, calcula o hash dos resultados e grava ou carrega JSON. O schema `1.3` registra a configuração de busca do v0.8 e mantém formato, parâmetros de qualidade e configuração de alinhamento das versões anteriores.
 
 ## `src/version.py`
 
