@@ -33,7 +33,7 @@ from src.reproducibility.hashing import (
 from src.version import __version__
 
 
-MANIFEST_SCHEMA_VERSION = "1.2"
+MANIFEST_SCHEMA_VERSION = "1.3"
 
 
 _RESULT_HASH_FIELDS = (

@@ -18,6 +18,7 @@ from src.contracts import (
     AnalysisResult,
     InputFormat,
 )
+from src.search.cache import SearchCache
 from src.services.analysis_service import (
     ProgressCallback,
     analyze_fasta_file,
@@ -50,6 +51,12 @@ def analyze_sequence_file(
     trim_quality_threshold: int = (
         DEFAULT_FASTQ_TRIM_QUALITY
     ),
+    search_backend: str = "pairwise",
+    blast_database_path: str | None = None,
+    search_timeout_seconds: float = 30.0,
+    search_database_hash: str = "",
+    blast_version: str | None = None,
+    search_cache: SearchCache | None = None,
 ) -> AnalysisResult:
     """Dispatch FASTA or FASTQ to the appropriate service."""
 
@@ -66,6 +73,12 @@ def analyze_sequence_file(
             reference_metadata_path=(
                 reference_metadata_path
             ),
+            search_backend=search_backend,
+            blast_database_path=blast_database_path,
+            search_timeout_seconds=search_timeout_seconds,
+            search_database_hash=search_database_hash,
+            blast_version=blast_version,
+            search_cache=search_cache,
         )
 
     if input_format == "fastq":
@@ -88,6 +101,12 @@ def analyze_sequence_file(
             trim_quality_threshold=(
                 trim_quality_threshold
             ),
+            search_backend=search_backend,
+            blast_database_path=blast_database_path,
+            search_timeout_seconds=search_timeout_seconds,
+            search_database_hash=search_database_hash,
+            blast_version=blast_version,
+            search_cache=search_cache,
         )
 
     raise ValueError(

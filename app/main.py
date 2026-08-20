@@ -39,6 +39,14 @@ from src.config import (  # noqa: E402
 from src.services.analysis_service import (  # noqa: E402
     AnalysisError,
 )
+from src.search.blast_backend import (  # noqa: E402
+    BlastExecutionError,
+    BlastNotInstalledError,
+    BlastTimeoutError,
+)
+from src.reproducibility.hashing import (  # noqa: E402
+    sha256_file,
+)
 from src.services.reproducible_analysis_service import (  # noqa: E402
     analyze_sequence_file_reproducibly,
 )
@@ -82,6 +90,64 @@ with st.sidebar:
         value=DEFAULT_TOP_N,
         step=1,
     )
+
+    search_backend = st.selectbox(
+        "Mecanismo de busca",
+        options=["pairwise", "blast"],
+        format_func=lambda value: (
+            "Alinhamento pairwise"
+            if value == "pairwise"
+            else "BLAST local"
+        ),
+    )
+
+    search_timeout_seconds = st.number_input(
+        "Timeout da busca (s)",
+        min_value=1.0,
+        value=30.0,
+        step=1.0,
+    )
+
+    cache_enabled = st.checkbox(
+        "Habilitar cache da busca",
+        value=True,
+    )
+
+    blast_database_path: str | None = None
+    blast_database_sha256: str | None = None
+    blast_version: str | None = None
+
+    if search_backend == "blast":
+        blast_database_path = st.text_input(
+            "Banco BLAST",
+            value=(
+                "tests/data/blast/db/"
+                "biotrace_test"
+            ),
+            help=(
+                "Informe o prefixo do banco, "
+                "sem extensão."
+            ),
+        )
+
+        blast_version = st.text_input(
+            "Versão do BLAST+",
+            value="2.17.0+",
+        )
+
+        blast_metadata_path = Path(
+            f"{blast_database_path}.metadata.json"
+        )
+
+        if blast_metadata_path.exists():
+            blast_database_sha256 = sha256_file(
+                blast_metadata_path
+            )
+
+            st.caption(
+                "Integridade do banco registrada "
+                "a partir da metadata controlada."
+            )
 
     with st.expander(
         "Controle de qualidade FASTQ"
@@ -261,8 +327,42 @@ if uploaded_file:
                 trim_quality_threshold=int(
                     trim_quality_threshold
                 ),
+                search_backend=search_backend,
+                blast_database_path=(
+                    blast_database_path
+                ),
+                blast_database_sha256=(
+                    blast_database_sha256
+                ),
+                blast_version=blast_version,
+                search_timeout_seconds=float(
+                    search_timeout_seconds
+                ),
+                cache_enabled=cache_enabled,
             )
         )
+
+    except BlastNotInstalledError:
+        st.error(
+            "O NCBI BLAST+ não foi encontrado. "
+            "Instale o BLAST+ e confirme que o comando "
+            "'blastn' está disponível no PATH."
+        )
+        st.stop()
+
+    except BlastTimeoutError as error:
+        st.error(
+            "A busca BLAST excedeu o "
+            f"tempo limite: {error}"
+        )
+        st.stop()
+
+    except BlastExecutionError as error:
+        st.error(
+            "O BLAST não conseguiu concluir "
+            f"a busca: {error}"
+        )
+        st.stop()
 
     except AnalysisError as error:
         st.error(str(error))
@@ -413,6 +513,75 @@ if uploaded_file:
                     f"{run_manifest['run_id']}"
                 ),
             )
+
+        search_parameters = run_manifest[
+            "parameters"
+        ]
+
+        with st.expander(
+            "Mecanismo de busca"
+        ):
+            backend_name = search_parameters[
+                "search_backend"
+            ]
+
+            st.metric(
+                "Mecanismo de busca",
+                (
+                    "BLAST local"
+                    if backend_name == "blast"
+                    else "Alinhamento pairwise"
+                ),
+            )
+
+            if backend_name == "blast":
+                blast_database = (
+                    search_parameters[
+                        "blast_database_path"
+                    ]
+                )
+
+                blast_columns = st.columns(4)
+
+                blast_columns[0].metric(
+                    "Banco",
+                    (
+                        Path(blast_database).name
+                        if blast_database
+                        else "não informado"
+                    ),
+                )
+
+                blast_columns[1].metric(
+                    "BLAST+",
+                    search_parameters[
+                        "blast_version"
+                    ]
+                    or "não informado",
+                )
+
+                blast_columns[2].metric(
+                    "Timeout",
+                    (
+                        f"{search_parameters['search_timeout_seconds']} s"
+                    ),
+                )
+
+                blast_columns[3].metric(
+                    "Cache",
+                    (
+                        "habilitado"
+                        if search_parameters[
+                            "cache_enabled"
+                        ]
+                        else "desabilitado"
+                    ),
+                )
+            else:
+                st.caption(
+                    "Backend pairwise com orientação "
+                    "e alinhamento biológico local."
+                )
 
     for warning in analysis.get(
         "reference_warnings",
@@ -734,6 +903,35 @@ if uploaded_file:
     results_df = pd.DataFrame(
         analysis["results"]
     )
+
+    preferred_result_columns = [
+        "ID",
+        "Espécie escolhida",
+        "Melhor similaridade (%)",
+        "Backend de busca",
+        "Identidade do alinhamento (%)",
+        "Cobertura do alinhamento (%)",
+        "E-value",
+        "Bit score",
+        "Cache",
+    ]
+
+    visible_result_columns = [
+        column
+        for column in preferred_result_columns
+        if column in results_df.columns
+    ]
+
+    remaining_result_columns = [
+        column
+        for column in results_df.columns
+        if column not in visible_result_columns
+    ]
+
+    results_df = results_df[
+        visible_result_columns
+        + remaining_result_columns
+    ]
 
     st.dataframe(
         results_df,

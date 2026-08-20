@@ -11,8 +11,18 @@ from src.config import (
 )
 from src.fasta import SequenceRecord
 from src.reference.database import ReferenceDatabase
+from src.search.cache import (
+    SearchCache,
+    build_search_cache_key,
+)
+from src.search.contracts import SearchParameters
+from src.search.factory import create_search_backend
 from src.stats import summarize_sequences
-from src.taxonomy import classify_sequence
+from src.taxonomy import (
+    classify_sequence,
+    classify_with_backend,
+)
+from src.version import __version__
 
 
 ProgressCallback = Callable[
@@ -35,6 +45,12 @@ def analyze_valid_sequences(
     progress_callback: ProgressCallback | None = None,
     progress_start: float = 0.55,
     progress_end: float = 0.95,
+    search_backend: str = "pairwise",
+    blast_database_path: str | None = None,
+    search_timeout_seconds: float = 30.0,
+    search_cache: SearchCache | None = None,
+    search_database_hash: str = "",
+    blast_version: str | None = None,
 ) -> dict[str, object]:
     """Calculate metrics, load references and classify validated sequences."""
 
@@ -52,6 +68,18 @@ def analyze_valid_sequences(
     database = ReferenceDatabase.from_files(
         reference_database_path,
         reference_metadata_path,
+    )
+
+    backend = create_search_backend(
+        search_backend,
+        reference_database=database,
+        blast_database_path=blast_database_path,
+    )
+
+    cache = (
+        search_cache
+        if search_cache is not None
+        else SearchCache()
     )
 
     results: list[
@@ -89,12 +117,44 @@ def analyze_valid_sequences(
                 f"{total_valid}...",
             )
 
-        classification = classify_sequence(
-            item["sequence"],
-            database,
-            min_similarity=min_similarity,
+        sequence = item["sequence"]
+
+        parameters = SearchParameters(
             top_n=top_n,
+            timeout_seconds=search_timeout_seconds,
         )
+
+        cache_key = build_search_cache_key(
+            sequence=sequence,
+            database_hash=search_database_hash,
+            parameters=parameters,
+            backend=backend.name,
+            blast_version=blast_version,
+            biotrace_version=__version__,
+        )
+
+        cached = cache.lookup(
+            cache_key
+        )
+
+        if cached.hit:
+            classification = cached.value
+            cache_hit = True
+        else:
+            classification = classify_with_backend(
+                sequence,
+                backend=backend,
+                min_similarity=min_similarity,
+                top_n=top_n,
+                timeout_seconds=search_timeout_seconds,
+            )
+
+            cache.set(
+                cache_key,
+                classification,
+            )
+
+            cache_hit = False
 
         rankings[item["id"]] = (
             classification["ranking"]
@@ -138,6 +198,24 @@ def analyze_valid_sequences(
                         "alignment_coverage",
                         0.0,
                     )
+                ),
+                "Backend de busca": (
+                    classification["backend"]
+                ),
+                "E-value": (
+                    classification.get(
+                        "evalue"
+                    )
+                ),
+                "Bit score": (
+                    classification.get(
+                        "bit_score"
+                    )
+                ),
+                "Cache": (
+                    "hit"
+                    if cache_hit
+                    else "miss"
                 ),
                 "Referência escolhida": (
                     classification["reference_id"]

@@ -135,6 +135,41 @@ def _validate_alignment_parameters(
             )
 
 
+def _validate_search_parameters(
+    parameters: dict[str, object],
+    *,
+    expected_backend: str,
+    expected_timeout: float,
+    expected_blast_version: str | None,
+    expected_database_path: str | None,
+    expected_database_sha256: str | None,
+    expected_cache_enabled: bool,
+) -> None:
+    """Validate search configuration recorded in a run manifest."""
+
+    expected = {
+        "search_backend": expected_backend,
+        "search_timeout_seconds": expected_timeout,
+        "blast_version": expected_blast_version,
+        "blast_database_path": expected_database_path,
+        "blast_database_sha256": expected_database_sha256,
+        "cache_enabled": expected_cache_enabled,
+    }
+
+    for parameter_name, expected_value in expected.items():
+        recorded_value = parameters.get(
+            parameter_name
+        )
+
+        if recorded_value != expected_value:
+            raise ValueError(
+                "Search parameter mismatch for "
+                f"{parameter_name!r}: "
+                f"manifest={recorded_value!r}, "
+                f"current={expected_value!r}."
+            )
+
+
 def main() -> int:
     args = parse_args()
 

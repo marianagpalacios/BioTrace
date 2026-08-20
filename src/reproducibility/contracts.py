@@ -36,6 +36,15 @@ class AnalysisParameters(TypedDict):
     alignment_open_gap_score: float
     alignment_extend_gap_score: float
 
+    search_backend: str
+    search_timeout_seconds: float
+
+    blast_version: str | None
+    blast_database_path: str | None
+    blast_database_sha256: str | None
+
+    cache_enabled: bool
+
 
 class InputSnapshot(TypedDict):
     filename: str

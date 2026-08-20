@@ -83,3 +83,26 @@ O checksum SHA-256 representa os bytes exatos de `species_database.csv`. Antes d
 - dependência da qualidade das identificações depositadas nas fontes;
 - similaridade por distância de edição, sem alinhamento biológico completo;
 - inadequado para conclusões taxonômicas, ecológicas, clínicas ou ambientais isoladas.
+
+## Bancos BLAST locais
+
+O BioTrace pode construir um índice BLAST local a partir de uma base FASTA.
+
+A construção utiliza `makeblastdb`.
+
+O projeto registra:
+
+- versão lógica do banco;
+- fonte;
+- marcador;
+- data de criação;
+- versão do BLAST+;
+- comando utilizado;
+- SHA-256 do FASTA;
+- número de sequências;
+- arquivos do índice;
+- SHA-256 de cada arquivo.
+
+Bancos grandes e seus índices não devem ser versionados diretamente no Git.
+
+Os testes usam uma base pequena e controlada em `tests/data/blast/`.

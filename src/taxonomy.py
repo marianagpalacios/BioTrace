@@ -5,6 +5,10 @@ from src.orientation_resolver import (
     resolve_orientation,
 )
 from src.reference.database import ReferenceDatabase
+from src.search.contracts import (
+    SearchBackend,
+    SearchParameters,
+)
 from src.similarity import calculate_similarity
 
 
@@ -172,6 +176,91 @@ def rank_alignment_matches(
     )
 
     return ranked_matches[:top_n]
+
+
+def classify_with_backend(
+    sequence: str,
+    *,
+    backend: SearchBackend,
+    min_similarity: float,
+    top_n: int = 5,
+    timeout_seconds: float = 30.0,
+) -> dict[str, object]:
+    """Classify a sequence using a configurable search backend."""
+
+    hits = backend.search(
+        sequence,
+        SearchParameters(
+            top_n=top_n,
+            timeout_seconds=timeout_seconds,
+        ),
+    )
+
+    if not hits:
+        return {
+            "species": None,
+            "similarity": 0.0,
+            "reference_id": None,
+            "gene": "",
+            "accession": "",
+            "source": "",
+            "identified": False,
+            "backend": backend.name,
+            "orientation": 0,
+            "alignment_identity": 0.0,
+            "alignment_coverage": 0.0,
+            "evalue": None,
+            "bit_score": None,
+            "ranking": [],
+        }
+
+    best_hit = hits[0]
+
+    ranking = [
+        {
+            "species": hit.species,
+            "reference_id": hit.reference_id,
+            "similarity": hit.identity,
+            "gene": hit.gene,
+            "accession": hit.accession,
+            "source": hit.source,
+            "backend": hit.backend,
+            "orientation": hit.orientation,
+            "alignment_identity": hit.identity,
+            "alignment_coverage": hit.coverage,
+            "alignment_score": hit.score,
+            "evalue": hit.evalue,
+            "bit_score": hit.bit_score,
+        }
+        for hit in hits
+    ]
+
+    identified = (
+        best_hit.identity
+        >= min_similarity
+    )
+
+    return {
+        "species": (
+            best_hit.species
+            if identified
+            else None
+        ),
+        "similarity": best_hit.identity,
+        "reference_id": best_hit.reference_id,
+        "gene": best_hit.gene,
+        "accession": best_hit.accession,
+        "source": best_hit.source,
+        "identified": identified,
+        "backend": backend.name,
+        "orientation": best_hit.orientation,
+        "alignment_identity": best_hit.identity,
+        "alignment_coverage": best_hit.coverage,
+        "alignment_score": best_hit.score,
+        "evalue": best_hit.evalue,
+        "bit_score": best_hit.bit_score,
+        "ranking": ranking,
+    }
 
 
 def classify_sequence(

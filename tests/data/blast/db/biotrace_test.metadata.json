@@ -1,0 +1,76 @@
+{
+  "database_version": "test-1",
+  "source": "BioTrace controlled test data",
+  "marker": "COI",
+  "created_at": "2026-08-19T17:49:41.481587+00:00",
+  "blast_version": "makeblastdb: 2.17.0+",
+  "command": [
+    "makeblastdb",
+    "-in",
+    "tests\\data\\blast\\references.fasta",
+    "-dbtype",
+    "nucl",
+    "-parse_seqids",
+    "-title",
+    "BioTrace BLAST database",
+    "-out",
+    "tests\\data\\blast\\db\\biotrace_test"
+  ],
+  "input_fasta": {
+    "path": "tests\\data\\blast\\references.fasta",
+    "sha256": "e90ba12cfc9266666ae4337f0aa8d61c3fd825f8b3da24f0d67af801ddf5290e"
+  },
+  "sequence_count": 3,
+  "index_files": [
+    {
+      "name": "biotrace_test.ndb",
+      "sha256": "eea60075e1a204a950e308927dc9c0865d6fee494e45017537dc6c2cbcbfa194",
+      "size_bytes": 500000
+    },
+    {
+      "name": "biotrace_test.nhr",
+      "sha256": "af718d577bb60861de7d97e0968fd8bc0441d88bf4fd898631fd20a77b96e72e",
+      "size_bytes": 203
+    },
+    {
+      "name": "biotrace_test.nin",
+      "sha256": "848bd71e673e7876258636e8a44b5879ed8cc90bdf204b0f15a89eb17617cdf2",
+      "size_bytes": 156
+    },
+    {
+      "name": "biotrace_test.njs",
+      "sha256": "de04a5749e7b519e645015049da83663bbda4de3ea9401b523f92a2b1ea01b0d",
+      "size_bytes": 580
+    },
+    {
+      "name": "biotrace_test.nog",
+      "sha256": "9737c109bd5ffe7d9ba15395316d061b5b564329611151a4a7c9376d7f4924f2",
+      "size_bytes": 44
+    },
+    {
+      "name": "biotrace_test.nos",
+      "sha256": "28a63c340ffe2b3e6e84cb995e409cdcd00c78c7f3456df9d7f00a03ad3f9eaa",
+      "size_bytes": 121
+    },
+    {
+      "name": "biotrace_test.not",
+      "sha256": "2fe74ed407f31bcf46d19d27aa6910733f0d9d3861980227f1e06cb61132a444",
+      "size_bytes": 44
+    },
+    {
+      "name": "biotrace_test.nsq",
+      "sha256": "d4f7b21d4e46da762c79661399ac341312d87544f1a3f46c2f632bcf0f0aa78a",
+      "size_bytes": 19
+    },
+    {
+      "name": "biotrace_test.ntf",
+      "sha256": "811fcc1c59308d9bfc396b93a0d861101454290622bd4ce6f8abc450cf05593f",
+      "size_bytes": 500000
+    },
+    {
+      "name": "biotrace_test.nto",
+      "sha256": "6256a4b0be4127b6ff9fa076fe7595961bc296521bd01220f64c6f95768c1fdd",
+      "size_bytes": 16
+    }
+  ]
+}

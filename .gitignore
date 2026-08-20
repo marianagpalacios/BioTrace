@@ -11,3 +11,20 @@ logs/*
 # Runtime analysis manifests
 runs/*
 !runs/.gitkeep
+
+# Local BLAST databases
+data/blast/
+database/blast/
+*.nhr
+*.nin
+*.nsq
+*.ndb
+*.njs
+*.nog
+*.nos
+*.not
+*.ntf
+*.nto
+
+# Keep the small controlled BLAST fixtures available for tests and CI.
+!tests/data/blast/**

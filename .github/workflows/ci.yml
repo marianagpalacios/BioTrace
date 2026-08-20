@@ -49,6 +49,13 @@ jobs:
         run: |
           python -m pip install -r requirements-dev.txt
 
+      - name: Install NCBI BLAST+
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ncbi-blast+
+          blastn -version
+          makeblastdb -version
+
       - name: Verify project
         run: |
           python scripts/verify_project.py

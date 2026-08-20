@@ -244,4 +244,70 @@ def test_reproducible_fastq_records_qc_parameters(
         ]
         == -0.5
     )
+    assert parameters["search_backend"] == "pairwise"
+    assert (
+        parameters["search_timeout_seconds"]
+        == 30.0
+    )
+    assert parameters["blast_version"] is None
+    assert (
+        parameters["blast_database_path"]
+        is None
+    )
+    assert (
+        parameters["blast_database_sha256"]
+        is None
+    )
+    assert parameters["cache_enabled"] is True
     assert result["quality_summary"]["passed_records"] == 1
+
+
+def test_reproducible_blast_records_search_parameters(
+    tmp_path,
+    monkeypatch,
+):
+    def fake_analysis(*args, **kwargs):
+        return {
+            "total_sequences": 0,
+            "valid_count": 0,
+            "invalid_count": 0,
+            "results": [],
+            "rankings": {},
+            "summary": {},
+        }
+
+    monkeypatch.setattr(
+        "src.services.reproducible_analysis_service."
+        "analyze_sequence_file",
+        fake_analysis,
+    )
+
+    result = analyze_sequence_file_reproducibly(
+        file_path=str(EXAMPLE_FASTA),
+        input_format="fasta",
+        manifest_directory=tmp_path,
+        search_backend="blast",
+        blast_database_path="db/biotrace",
+        blast_database_sha256="abc123",
+        blast_version="2.17.0+",
+        search_timeout_seconds=15.0,
+        cache_enabled=True,
+    )
+
+    parameters = result["run_manifest"]["parameters"]
+
+    assert parameters["search_backend"] == "blast"
+    assert parameters["blast_version"] == "2.17.0+"
+    assert (
+        parameters["blast_database_path"]
+        == "db/biotrace"
+    )
+    assert (
+        parameters["blast_database_sha256"]
+        == "abc123"
+    )
+    assert (
+        parameters["search_timeout_seconds"]
+        == 15.0
+    )
+    assert parameters["cache_enabled"] is True

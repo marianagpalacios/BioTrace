@@ -34,6 +34,7 @@ from src.reproducibility.manifest import (
     utc_now_iso,
     write_run_manifest,
 )
+from src.search.cache import SearchCache
 from src.services.analysis_service import (
     ProgressCallback,
 )
@@ -61,6 +62,12 @@ def _analysis_parameters(
     alignment_mismatch_score: float,
     alignment_open_gap_score: float,
     alignment_extend_gap_score: float,
+    search_backend: str,
+    search_timeout_seconds: float,
+    blast_version: str | None,
+    blast_database_path: str | None,
+    blast_database_sha256: str | None,
+    cache_enabled: bool,
 ) -> AnalysisParameters:
     """Build a format-aware parameter snapshot."""
 
@@ -99,6 +106,16 @@ def _analysis_parameters(
                 float(
                     alignment_extend_gap_score
                 )
+            ),
+            "search_backend": search_backend,
+            "search_timeout_seconds": float(
+                search_timeout_seconds
+            ),
+            "blast_version": blast_version,
+            "blast_database_path": blast_database_path,
+            "blast_database_sha256": blast_database_sha256,
+            "cache_enabled": bool(
+                cache_enabled
             ),
         }
 
@@ -141,6 +158,16 @@ def _analysis_parameters(
                 alignment_extend_gap_score
             )
         ),
+        "search_backend": search_backend,
+        "search_timeout_seconds": float(
+            search_timeout_seconds
+        ),
+        "blast_version": blast_version,
+        "blast_database_path": blast_database_path,
+        "blast_database_sha256": blast_database_sha256,
+        "cache_enabled": bool(
+            cache_enabled
+        ),
     }
 
 
@@ -168,12 +195,23 @@ def analyze_sequence_file_reproducibly(
     trim_quality_threshold: int = (
         DEFAULT_FASTQ_TRIM_QUALITY
     ),
+    search_backend: str = "pairwise",
+    blast_database_path: str | None = None,
+    blast_database_sha256: str | None = None,
+    blast_version: str | None = None,
+    search_timeout_seconds: float = 30.0,
+    cache_enabled: bool = True,
 ) -> ReproducibleAnalysisResult:
     """Run BioTrace and persist execution provenance."""
 
     run_id = new_run_id()
     started_at_utc = utc_now_iso()
     started_at = perf_counter()
+
+    if search_backend.strip().lower() == "pairwise":
+        blast_version = None
+        blast_database_path = None
+        blast_database_sha256 = None
 
     parameters = _analysis_parameters(
         input_format=input_format,
@@ -202,6 +240,12 @@ def analyze_sequence_file_reproducibly(
         alignment_extend_gap_score=(
             DEFAULT_ALIGNMENT_EXTEND_GAP_SCORE
         ),
+        search_backend=search_backend,
+        search_timeout_seconds=search_timeout_seconds,
+        blast_version=blast_version,
+        blast_database_path=blast_database_path,
+        blast_database_sha256=blast_database_sha256,
+        cache_enabled=cache_enabled,
     )
 
     try:
@@ -224,6 +268,18 @@ def analyze_sequence_file_reproducibly(
             trim_ends=trim_ends,
             trim_quality_threshold=(
                 trim_quality_threshold
+            ),
+            search_backend=search_backend,
+            blast_database_path=blast_database_path,
+            search_timeout_seconds=search_timeout_seconds,
+            search_database_hash=(
+                blast_database_sha256 or ""
+            ),
+            blast_version=blast_version,
+            search_cache=(
+                SearchCache()
+                if cache_enabled
+                else None
             ),
         )
 

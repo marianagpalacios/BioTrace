@@ -2,8 +2,8 @@
 
 > Plataforma open source para análise automatizada de DNA ambiental (eDNA), identificação taxonômica simplificada e geração de indicadores iniciais de biodiversidade.
 
-**Versão atual:** MVP v0.7.0
-**Foco da versão:** orientação de sequências e alinhamento biológico.
+**Versão atual:** MVP v0.8.0 em desenvolvimento
+**Foco da versão:** BLAST local, bancos maiores e busca reproduzível.
 
 ---
 
@@ -540,6 +540,32 @@ A versão atual usa configuração em código. Arquivo externo de configuração
 
 ---
 
+### MVP v0.8.0 — BLAST e bancos maiores
+
+O BioTrace passou a oferecer dois mecanismos de busca de referências:
+
+- alinhamento pairwise;
+- BLAST local com NCBI BLAST+.
+
+Principais recursos adicionados:
+
+- contrato comum `SearchBackend`;
+- backend pairwise compatível com o v0.7;
+- backend BLAST local com `blastn`;
+- parsing tabular controlado;
+- identidade, cobertura, e-value e bit score;
+- ranking de hits;
+- melhor resultado por espécie;
+- construção e verificação de bancos BLAST;
+- rastreabilidade dos arquivos de índice por SHA-256;
+- timeout de buscas;
+- cache baseado em configuração científica;
+- integração com FASTA e FASTQ;
+- manifesto reproduzível schema `1.3`;
+- validação de incompatibilidades na reprodução.
+
+---
+
 ## Limitações atuais
 
 - cobertura taxonômica restrita a 5 espécies e 10 referências;
@@ -549,8 +575,6 @@ A versão atual usa configuração em código. Arquivo externo de configuração
 - ausência de denoising e remoção de quimeras;
 - ausência de inferência de ASVs e agrupamento em OTUs;
 - ausência de suporte a `FASTQ.gz`;
-- ausência de BLAST;
-- comparação exaustiva com todas as referências;
 - ausência de ambiente hermético ou container versionado;
 - dependências nativas e detalhes do sistema ainda podem afetar reproduções;
 - reprodução depende da disponibilidade dos artefatos originais;
@@ -559,9 +583,9 @@ A versão atual usa configuração em código. Arquivo externo de configuração
 
 ---
 
-## Próxima versão
+## Versão em desenvolvimento
 
-O MVP v0.8.0 permanece planejado. Seu escopo será revisado após o fechamento do v0.7.0.
+O MVP v0.8.0 integra BLAST local e uma abstração comum para mecanismos de busca. O fechamento da versão ocorrerá após a revisão final, CI e publicação da release.
 
 Consulte [`docs/roadmap.md`](docs/roadmap.md) para o plano completo.
 

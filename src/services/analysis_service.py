@@ -16,6 +16,7 @@ from src.reference.curation_validator import CuratedReferenceValidationError
 from src.reference.loader import ReferenceDatabaseLoadError
 from src.reference.metadata import ReferenceMetadataError
 from src.reference.validator import ReferenceDatabaseValidationError
+from src.search.cache import SearchCache
 from src.services.classification_service import analyze_valid_sequences
 from src.stats import summarize_sequences
 from src.validation import validate_sequences
@@ -46,6 +47,12 @@ def analyze_fasta_file(
     top_n: int = DEFAULT_TOP_N,
     progress_callback: ProgressCallback | None = None,
     reference_metadata_path: str | Path = DEFAULT_REFERENCE_METADATA_PATH,
+    search_backend: str = "pairwise",
+    blast_database_path: str | None = None,
+    search_timeout_seconds: float = 30.0,
+    search_database_hash: str = "",
+    blast_version: str | None = None,
+    search_cache: SearchCache | None = None,
 ) -> AnalysisResult:
     """Run the complete BioTrace FASTA analysis pipeline."""
 
@@ -120,6 +127,12 @@ def analyze_fasta_file(
             progress_callback=progress_callback,
             progress_start=0.6,
             progress_end=0.95,
+            search_backend=search_backend,
+            blast_database_path=blast_database_path,
+            search_timeout_seconds=search_timeout_seconds,
+            search_database_hash=search_database_hash,
+            blast_version=blast_version,
+            search_cache=search_cache,
         )
     except (
         ReferenceDatabaseLoadError,

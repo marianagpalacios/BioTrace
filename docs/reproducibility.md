@@ -157,6 +157,24 @@ python scripts\verify_project.py
 
 O mesmo comando é executado pelo GitHub Actions em Python 3.12, 3.13 e 3.14.
 
+## Busca de referências no schema 1.3
+
+A partir do MVP v0.8.0, o manifesto registra também a configuração do mecanismo de busca.
+
+São registrados:
+
+- backend selecionado (`pairwise` ou `blast`);
+- timeout;
+- versão do NCBI BLAST+;
+- caminho lógico do banco BLAST;
+- SHA-256 do banco;
+- estado do cache;
+- parâmetros de alinhamento anteriores;
+- resultados com identidade e cobertura;
+- e-value e bit score quando disponíveis.
+
+O script `reproduce_run.py` rejeita reproduções quando a configuração registrada não corresponde à configuração atual.
+
 ## Limitações
 
 O MVP não cria ambientes herméticos completos. Versões do sistema operacional, bibliotecas nativas, arquitetura do processador e dependências externas ainda podem afetar determinadas execuções.
